@@ -2088,7 +2088,6 @@ bool rrc_nr::apply_drb_add_mod(const drb_to_add_mod_s& drb_cfg)
 
 bool rrc_nr::apply_security_cfg(const security_cfg_s& security_cfg)
 {
-  // TODO derive correct keys
   if (security_cfg.key_to_use_present) {
     if (security_cfg.key_to_use.value != security_cfg_s::key_to_use_opts::options::secondary) {
       logger.warning("Only secondary key supported yet");
@@ -2129,6 +2128,7 @@ bool rrc_nr::apply_security_cfg(const security_cfg_s& security_cfg)
 
   // Apply security config for all known NR lcids
   for (auto& lcid : lcid_drb) {
+    logger.debug("Applying PDCP security config. LCID=%d", lcid.first);
     pdcp->config_security(lcid.first, sec_cfg);
     pdcp->enable_encryption(lcid.first);
   }
