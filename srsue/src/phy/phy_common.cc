@@ -780,6 +780,17 @@ void phy_common::update_measurements(uint32_t                     cc_idx,
     ch.sinr         = avg_sinr_db[cc_idx];
     ch.sync_err     = chest_res.sync_error;
 
+    // added log to track rssi etc
+    logger.info("cc_idx %d, noise %3.3f, rsrp %3.3f, rsrq %3.3f, rssi %3.3f, pathloss %3.3f, sinr % 3.3f, sync_err %f",
+                cc_idx,
+                ch.n,
+                ch.rsrp,
+                ch.rsrq,
+                ch.rssi,
+                ch.pathloss,
+                ch.sinr,
+                ch.sync_err);
+
     set_ch_metrics(cc_idx, ch);
 
     // Prepare measurements for serving cells - skip if any measurement is invalid assuming pure zeros are not possible
