@@ -112,6 +112,11 @@ struct general_args_t {
   uint32_t    rlf_release_timer_ms;
 };
 
+// daemonize
+typedef struct {
+  bool daemonize;
+} runtime_args_t;
+
 struct all_args_t {
   enb_args_t        enb;
   enb_files_t       enb_files;
@@ -122,6 +127,7 @@ struct all_args_t {
   phy_args_t        phy;
   stack_args_t      stack;
   gnb_stack_args_t  nr_stack;
+  runtime_args_t    runtime;
 };
 
 struct rrc_cfg_t;

@@ -59,10 +59,15 @@ typedef struct {
 } log_args_t;
 
 typedef struct {
+  bool daemonize;
+} runtime_args_t;
+
+typedef struct {
   mme_args_t  mme_args;
   hss_args_t  hss_args;
   spgw_args_t spgw_args;
   log_args_t  log_args;
+  runtime_args_t runtime;
 } all_args_t;
 
 static srslog::sink*     log_sink = nullptr;
@@ -152,6 +157,9 @@ void parse_args(all_args_t* args, int argc, char* argv[])
     ("log.all_hex_limit", bpo::value<int>(&args->log_args.all_hex_limit)->default_value(32),  "ALL log hex dump limit")
 
     ("log.filename", bpo::value<string>(&args->log_args.filename)->default_value("/tmp/epc.log"),"Log filename")
+
+    // run as a daemon
+    ("runtime.daemonize",   bpo::value<bool>(&args->runtime.daemonize)->default_value(false), "Run this process as a daemon")
     ;
 
   // Positional options - config file location
@@ -387,14 +395,20 @@ int main(int argc, char* argv[])
   srsran_register_signal_handler(signal_handler);
   add_emergency_cleanup_handler(emergency_cleanup_handler, nullptr);
 
-  // print build info
-  cout << endl << get_build_string() << endl;
-
-  cout << endl << "---  Software Radio Systems EPC  ---" << endl << endl;
   srsran_debug_handle_crash(argc, argv);
 
   all_args_t args = {};
   parse_args(&args, argc, argv);
+
+  if(args.runtime.daemonize) {
+    cout << "Running as a daemon\n";
+    int ret = daemon(1, 0);
+  } else {
+    // print build info
+    cout << endl << get_build_string() << endl;
+
+    cout << endl <<"---  Software Radio Systems EPC  ---" << endl << endl;
+  }
 
   // Setup logging.
   log_sink = (args.log_args.filename == "stdout") ? srslog::create_stdout_sink()

@@ -280,6 +280,9 @@ void parse_args(all_args_t* args, int argc, char* argv[])
     ("scheduler.nr_pdsch_mcs", bpo::value<int>(&args->nr_stack.mac.sched_cfg.fixed_dl_mcs)->default_value(28), "Fixed NR DL MCS (-1 for dynamic).")
     ("scheduler.nr_pusch_mcs", bpo::value<int>(&args->nr_stack.mac.sched_cfg.fixed_ul_mcs)->default_value(28), "Fixed NR UL MCS (-1 for dynamic).")
     ("expert.nr_pusch_max_its", bpo::value<uint32_t>(&args->phy.nr_pusch_max_its)->default_value(10),     "Maximum number of LDPC iterations for NR.")
+
+    // run as a daemon
+    ("runtime.daemonize", bpo::value<bool>(&args->runtime.daemonize)->default_value(false), "Run this process as a daemon")
   ;
 
   // Positional options - config file location
@@ -601,7 +604,15 @@ int main(int argc, char* argv[])
   srsran::metrics_hub<enb_metrics_t> metricshub;
   metrics_stdout                     metrics_screen;
 
-  cout << "---  Software Radio Systems LTE eNodeB  ---" << endl << endl;
+  srsran_debug_handle_crash(argc, argv);
+  parse_args(&args, argc, argv);
+
+  if(args.runtime.daemonize) {
+    cout << "Running as a daemon\n";
+    int ret = daemon(1, 0);
+  } else {
+    cout << "---  Software Radio Systems LTE eNodeB  ---" << endl << endl;
+  }
 
   srsran_debug_handle_crash(argc, argv);
   parse_args(&args, argc, argv);
@@ -675,7 +686,11 @@ int main(int argc, char* argv[])
   }
 
   // create input thread
-  std::thread input(&input_loop, &metrics_screen, (enb_command_interface*)enb.get());
+  std::thread input{};
+
+  if(! args.runtime.daemonize) {
+    input = std::thread(&input_loop, &metrics_screen, (enb_command_interface*)enb.get());
+  }
 
   if (running) {
     if (args.gui.enable) {
@@ -704,7 +719,9 @@ int main(int argc, char* argv[])
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
-  input.join();
+  if(! args.runtime.daemonize) {
+    input.join();
+  }
   metricshub.stop();
   enb->stop();
   cout << "---  exiting  ---" << endl;
