@@ -127,6 +127,23 @@ if(RF_FOUND)
   # Add sources of file-based RF directly to the RF library (not as a plugin)
   list(APPEND SOURCES_RF rf_file_imp.c rf_file_imp_tx.c rf_file_imp_rx.c)
 
+  # added shmem rf device
+  if (ENABLE_SHMEMRF)
+    add_definitions(-DENABLE_SHMEMRF)
+    set(SOURCES_SHMEM rf_shmem_imp.c)
+    if (ENABLE_RF_PLUGINS)
+      add_library(srsran_rf_shmem SHARED ${SOURCES_SHMEM})
+      set_target_properties(srsran_rf_shmem PROPERTIES VERSION ${SRSRAN_VERSION_STRING} SOVERSION ${SRSRAN_SOVERSION})
+      list(APPEND DYNAMIC_PLUGINS srsran_rf_shmem)
+    else (ENABLE_RF_PLUGINS)
+      add_library(srsran_rf_shmem STATIC ${SOURCES_SHMEM})
+      list(APPEND STATIC_PLUGINS srsran_rf_shmem)
+    endif (ENABLE_RF_PLUGINS)
+    target_link_libraries(srsran_rf_shmem srsran_rf_utils srsran_phy rt)
+    install(TARGETS srsran_rf_shmem DESTINATION ${LIBRARY_DIR} OPTIONAL)
+  endif (ENABLE_SHMEMRF)
+
+
   # Top-level RF library
   add_library(srsran_rf_object OBJECT ${SOURCES_RF})
   set_property(TARGET srsran_rf_object PROPERTY POSITION_INDEPENDENT_CODE 1)

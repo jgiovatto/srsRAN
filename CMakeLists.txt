@@ -106,6 +106,9 @@ option(ENABLE_ALL_TEST       "Enable all unit/component test"           OFF)
 # it automatically so it is necessary to use the gcc wrappers of the compiler
 # (gcc-ar, gcc-nm, ...).
 option(BUILD_WITH_LTO        "Enable LTO (experimental)"                OFF)
+  
+# added option for shmem rf
+option(ENABLE_SHMEMRF        "Enable shared memory rf test device"      ON)
 
 if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "aarch64")
   set(GCC_ARCH armv8-a CACHE STRING "GCC compile for specific architecture.")
@@ -266,12 +269,12 @@ if(ENABLE_TIMEPROF)
     add_definitions(-DENABLE_TIMEPROF)
 endif(ENABLE_TIMEPROF)
 
-if(BLADERF_FOUND OR UHD_FOUND OR SOAPYSDR_FOUND OR ZEROMQ_FOUND OR SKIQ_FOUND)
+if(BLADERF_FOUND OR UHD_FOUND OR SOAPYSDR_FOUND OR ZEROMQ_FOUND OR SKIQ_FOUND OR ENABLE_SHMEMRF)
   set(RF_FOUND TRUE CACHE INTERNAL "RF frontend found")
-else(BLADERF_FOUND OR UHD_FOUND OR SOAPYSDR_FOUND OR ZEROMQ_FOUND OR SKIQ_FOUND)
+else(BLADERF_FOUND OR UHD_FOUND OR SOAPYSDR_FOUND OR ZEROMQ_FOUND OR SKIQ_FOUND OR ENABLE_SHMEMRF)
   set(RF_FOUND FALSE CACHE INTERNAL "RF frontend found")
   add_definitions(-DDISABLE_RF)
-endif(BLADERF_FOUND OR UHD_FOUND OR SOAPYSDR_FOUND OR ZEROMQ_FOUND OR SKIQ_FOUND)
+endif(BLADERF_FOUND OR UHD_FOUND OR SOAPYSDR_FOUND OR ZEROMQ_FOUND OR SKIQ_FOUND OR ENABLE_SHMEMRF)
 
 # Boost
 if(BUILD_STATIC)

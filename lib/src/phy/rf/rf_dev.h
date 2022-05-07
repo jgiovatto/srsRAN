@@ -91,7 +91,16 @@ static rf_dev_t srsran_rf_dev_dummy = {
     dummy_fnc, dummy_fnc, dummy_fnc, dummy_fnc, dummy_fnc, dummy_fnc, dummy_fnc, dummy_fnc, dummy_fnc, dummy_fnc,
     dummy_fnc, dummy_fnc, dummy_fnc, dummy_rcv, dummy_fnc, dummy_fnc, dummy_fnc, dummy_fnc, dummy_fnc};
 static srsran_rf_plugin_t plugin_dummy = {"", NULL, &srsran_rf_dev_dummy};
+#endif
 
+/* Define implementation for shared memory rf */
+#ifdef ENABLE_SHMEMRF
+#ifdef ENABLE_RF_PLUGINS
+static srsran_rf_plugin_t plugin_shmem = {"libsrsran_rf_shmem.so", NULL, NULL};
+#else
+#include "rf_shmem_imp.h"
+static srsran_rf_plugin_t plugin_shmem  = {"", NULL, &srsran_rf_dev_shmem};
+#endif
 #endif
 
 /**
@@ -116,6 +125,9 @@ static srsran_rf_plugin_t* rf_plugins[] = {
 #endif
 #ifdef ENABLE_DUMMY_DEV
     &plugin_dummy,
+#endif
+#ifdef ENABLE_SHMEMRF
+    &plugin_shmem,
 #endif
     &plugin_file,
     NULL};
