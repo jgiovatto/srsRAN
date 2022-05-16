@@ -1030,6 +1030,7 @@ bool rrc_nr::configure_sk_counter(uint16_t sk_counter)
   if (usim->generate_nr_context(sk_counter, &sec_cfg) == false) {
     return false;
   }
+  security_is_activated = true;
   return true;
 }
 
