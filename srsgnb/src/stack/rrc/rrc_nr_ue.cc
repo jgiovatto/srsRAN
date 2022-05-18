@@ -948,11 +948,13 @@ void rrc_nr::ue::send_connection_reest(uint8_t ncc)
   // set NCC
   reest.next_hop_chaining_count = ncc;
 
-  // add PDCP bearers
-  update_pdcp_bearers(next_radio_bearer_cfg, next_cell_group_cfg);
-
   // add RLC bearers
   update_rlc_bearers(next_cell_group_cfg);
+
+  // add PDCP bearers
+  // this is done after updating the RLC bearers,
+  // so the PDCP can query the RLC mode
+  update_pdcp_bearers(next_radio_bearer_cfg, next_cell_group_cfg);
 
   // add MAC bearers
   update_mac(next_cell_group_cfg, false);
@@ -1019,11 +1021,13 @@ void rrc_nr::ue::send_rrc_setup()
     logger.debug("Containerized MasterCellGroup: %s", js.to_string().c_str());
   }
 
-  // add PDCP bearers
-  update_pdcp_bearers(setup_ies.radio_bearer_cfg, next_cell_group_cfg);
-
   // add RLC bearers
   update_rlc_bearers(next_cell_group_cfg);
+
+  // add PDCP bearers
+  // this is done after updating the RLC bearers,
+  // so the PDCP can query the RLC mode
+  update_pdcp_bearers(next_radio_bearer_cfg, next_cell_group_cfg);
 
   // add MAC bearers
   update_mac(next_cell_group_cfg, false);
@@ -1171,6 +1175,8 @@ void rrc_nr::ue::send_rrc_reconfiguration()
     update_rlc_bearers(master_cell_group);
 
     // add PDCP bearers
+    // this is done after updating the RLC bearers,
+    // so the PDCP can query the RLC mode
     update_pdcp_bearers(ies.radio_bearer_cfg, master_cell_group);
   }
 
