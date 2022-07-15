@@ -218,8 +218,8 @@ typedef struct {
    rf_shmem_segment_t *      rx_segment[SRSRAN_MAX_CHANNELS];     // rx bins
    rf_shmem_segment_t *      tx_segment[SRSRAN_MAX_CHANNELS];     // tx bins
    double                    tx_level[SRSRAN_MAX_CHANNELS];       // tx level
-   double                    tx_level_adj[SRSRAN_MAX_CHANNELS];   // tx level adjustment
-   uint32_t                  tx_level_cycle[SRSRAN_MAX_CHANNELS]; // tx level adjustment cycle
+   double                    tx_level_adj[SRSRAN_MAX_CHANNELS];   // tx level adjustment (+/-)
+   uint32_t                  tx_level_cycle[SRSRAN_MAX_CHANNELS]; // tx level adjustment cycle sec
    uint32_t                  nof_channels;                        // num channels
    char                      channels[SRSRAN_MAX_CHANNELS][256];  // shmem channel ids
    bool                      active[SRSRAN_MAX_CHANNELS];         // channel is active
@@ -670,9 +670,11 @@ int rf_shmem_open_multi(char *args, void **h, uint32_t nof_channels)
          state->tx_level[channel] = 1.0;
          parse_double(args, "tx_level", channel, &state->tx_level[channel]);
 
+         // get optional tx level adjust (+/-)
          state->tx_level_adj[channel] = 0.0;
          parse_double(args, "tx_level_adj", channel, &state->tx_level_adj[channel]);
 
+         // get optional tx level cycle in seconds
          state->tx_level_cycle[channel] = 0;
          parse_uint32(args, "tx_level_cycle", channel, &state->tx_level_cycle[channel]);
 
@@ -1081,20 +1083,29 @@ int rf_shmem_send_timed_multi(void *h, void *data[4], int nsamples,
                element->meta.tx_freq    = _state->tx_freq[channel];
              }
 
-            // get the tx multiplier
+            // get the default tx multiplier default 1
             double mult = _state->tx_level[channel];
 
+            // level cycle enabled default 0
             if(_state->tx_level_cycle[channel] > 0)
              {
                const time_t ts = tv_now.tv_sec % _state->tx_level_cycle[channel];
 
                // check the adjustment cycle
-               if(ts < _state->tx_level_cycle[channel] / 2)
+               if(ts < (_state->tx_level_cycle[channel] / 2))
                 {
-                   // add adjustment to multiplier
+                   // add adjustmenti (+/-) to multiplier default 0
                    mult += _state->tx_level_adj[channel];
                 }
              }
+#if 0
+             fprintf(stderr, "channel %d, level %f, adjust %f, cycle %u, mult %f\n",
+                     channel, 
+                     _state->tx_level[channel],
+                     _state->tx_level_adj[channel],
+                     _state->tx_level_cycle[channel],
+                     mult);
+#endif
 
             if(mult > 0.0)
              {
