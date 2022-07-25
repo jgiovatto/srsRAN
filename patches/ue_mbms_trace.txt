@@ -1,0 +1,105 @@
+diff --git a/srsue/src/phy/lte/cc_worker.cc b/srsue/src/phy/lte/cc_worker.cc
+index e1f23b998..0b49cfceb 100644
+--- a/srsue/src/phy/lte/cc_worker.cc
++++ b/srsue/src/phy/lte/cc_worker.cc
+@@ -318,6 +318,7 @@ bool cc_worker::work_dl_regular()
+ 
+ bool cc_worker::work_dl_mbsfn(srsran_mbsfn_cfg_t mbsfn_cfg)
+ {
++  fprintf(stderr, "\tcc_worker:%s [1] ENTER\n", __func__);
+   mac_interface_phy_lte::tb_action_dl_t dl_action = {};
+ 
+   if (!cell_initiated) {
+@@ -353,13 +354,16 @@ bool cc_worker::work_dl_mbsfn(srsran_mbsfn_cfg_t mbsfn_cfg)
+     srsran_ra_dl_compute_nof_re(&cell, &sf_cfg_dl, &pmch_cfg.pdsch_cfg.grant);
+ 
+     // Send grant to MAC and get action for this TB, then call tb_decoded to unlock MAC
++    fprintf(stderr, "\tcc_worker:%s [2]\n", __func__);
+     phy->stack->new_mch_dl(pmch_cfg.pdsch_cfg.grant, &dl_action);
+     bool mch_decoded = true;
+     if (!decode_pmch(&dl_action, &mbsfn_cfg)) {
++      fprintf(stderr, "\tcc_worker:%s [3]\n", __func__);
+       mch_decoded = false;
+     }
+     phy->stack->mch_decoded((uint32_t)pmch_cfg.pdsch_cfg.grant.tb[0].tbs / 8, mch_decoded);
+   } else if (mbsfn_cfg.is_mcch) {
++    fprintf(stderr, "\tcc_worker:%s [4]\n", __func__);
+     // release lock in phy_common
+     phy->set_mch_period_stop(0);
+   }
+@@ -367,6 +371,7 @@ bool cc_worker::work_dl_mbsfn(srsran_mbsfn_cfg_t mbsfn_cfg)
+   /* Decode PHICH */
+   decode_phich();
+ 
++  fprintf(stderr, "\tcc_worker:%s [5] EXIT\n", __func__);
+   return true;
+ }
+ 
+diff --git a/srsue/src/phy/lte/sf_worker.cc b/srsue/src/phy/lte/sf_worker.cc
+index ff7fd22a7..4e159b21f 100644
+--- a/srsue/src/phy/lte/sf_worker.cc
++++ b/srsue/src/phy/lte/sf_worker.cc
+@@ -157,9 +157,11 @@ void sf_worker::set_config_nolock(uint32_t cc_idx, const srsran::phy_cfg_t& phy_
+ 
+ void sf_worker::work_imp()
+ {
++  fprintf(stderr, "sf_worker:%s tti %u, ENTER\n", __func__, context.sf_idx);
+   uint32_t            tti           = context.sf_idx;
+   srsran::rf_buffer_t tx_signal_ptr = {};
+   if (!cell_initiated) {
++    fprintf(stderr, "sf_worker:%s tti %u, early EXIT\n", __func__, context.sf_idx);
+     phy->worker_end(context, false, tx_signal_ptr);
+     return;
+   }
+@@ -243,6 +245,7 @@ void sf_worker::work_imp()
+     sem_post(&plot_sem);
+   }
+ #endif
++  fprintf(stderr, "sf_worker:%s tti %u, EXIT\n", __func__, context.sf_idx);
+ }
+ 
+ /********************* Uplink common control functions ****************************/
+diff --git a/srsue/src/phy/lte/worker_pool.cc b/srsue/src/phy/lte/worker_pool.cc
+index 9159c6288..6607bad65 100644
+--- a/srsue/src/phy/lte/worker_pool.cc
++++ b/srsue/src/phy/lte/worker_pool.cc
+@@ -75,7 +75,9 @@ void worker_pool::start_worker(sf_worker* w)
+ 
+ sf_worker* worker_pool::wait_worker(uint32_t tti)
+ {
++ fprintf(stderr, "\tworker_pool:%s call wait_worker tti %u\n", __func__, tti);
+   sf_worker* w = (sf_worker*)pool.wait_worker(tti);
++ fprintf(stderr, "\tworker_pool:%s done wait_worker tti %u\n", __func__, tti);
+   if (w == nullptr) {
+     return w;
+   }
+@@ -116,4 +118,4 @@ void worker_pool::set_config(uint32_t cc_idx, const srsran::phy_cfg_t& phy_cfg)
+   phy_cfg_stash[cc_idx].set_cfg(phy_cfg);
+ }
+ }; // namespace lte
+-}; // namespace srsue
+\ No newline at end of file
++}; // namespace srsue
+diff --git a/srsue/src/phy/phy_common.cc b/srsue/src/phy/phy_common.cc
+index 939ef0fd2..f234114d8 100644
+--- a/srsue/src/phy/phy_common.cc
++++ b/srsue/src/phy/phy_common.cc
+@@ -1009,6 +1009,7 @@ void phy_common::set_mch_period_stop(uint32_t stop)
+   std::lock_guard<std::mutex> lock(mtch_mutex);
+   have_mtch_stop  = true;
+   mch_period_stop = stop;
++  fprintf(stderr, "\t\t\tphy_common:%s XXX notify_one mtch_cvar\n", __func__);
+   mtch_cvar.notify_one();
+ }
+ 
+@@ -1073,8 +1074,10 @@ bool phy_common::is_mch_subframe(srsran_mbsfn_cfg_t* cfg, uint32_t phy_tti)
+           uint32_t                     sf_alloc_idx = frame_alloc_idx * mbsfn_per_frame + ((sf < 4) ? sf - 1 : sf - 3);
+           std::unique_lock<std::mutex> lock(mtch_mutex);
+           while (!have_mtch_stop) {
++            fprintf(stderr, "\t\t\tphy_common:%s XXX waiting on mtch_cvar\n", __func__);
+             mtch_cvar.wait(lock);
+           }
++          fprintf(stderr, "\t\t\tphy_common:%s XXX done with mtch_cvar\n", __func__);
+           lock.unlock();
+ 
+           for (uint32_t i = 0; i < mcch.nof_pmch_info; i++) {
