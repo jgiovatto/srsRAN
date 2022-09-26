@@ -179,7 +179,7 @@ typedef struct {
 
 const char * printMsg(const rf_shmem_element_t * element, char * buff, int buff_len)
  {
-   snprintf(buff, buff_len, "seqnum %lu, nof_bytes %u, nof_sf %u, srate %6.4f MHz, tti_tx %ld:%06ld, sob %d, eob %d",
+   snprintf(buff, buff_len, "seqnum %05lu, nof_bytes %u, nof_sf %u, srate %6.4f MHz, tti_tx %ld:%06ld, sob %d, eob %d",
             element->meta.seqnum,
             element->meta.nof_bytes,
             element->meta.nof_sf,
@@ -949,12 +949,14 @@ int rf_shmem_recv_with_time_multi(void *h, void **data, uint32_t nsamples,
           {
             // get the rx element
             rf_shmem_element_t * element = &_state->rx_segment[channel]->elements[sf_bin];
-#if 0
-            char logbuff[256] = {0};
-            fprintf(stderr,"RX, %ld:%06ld, channel %u, sf_bin %u, offset %u, %s\n", 
-                    tv_now.tv_sec, tv_now.tv_usec, channel, sf_bin, offset[channel], printMsg(element, logbuff, sizeof(logbuff)));
+#if 1
+            if((element->meta.seqnum % 1000 == 0) && (element->meta.nof_bytes > 0))
+             {
+               char logbuff[256] = {0};
+               fprintf(stderr,"RX, %ld:%06ld, channel %u, sf_bin %u, %s\n", 
+                       tv_now.tv_sec, tv_now.tv_usec, channel, sf_bin, printMsg(element, logbuff, sizeof(logbuff)));
+             }
 #endif
-      
             // check current tti w/sf_bin tti 
             if(timercmp(&_state->tv_this_tti, &element->meta.tv_tx_tti, ==))
              {
@@ -1120,10 +1122,14 @@ int rf_shmem_send_timed_multi(void *h, void *data[4], int nsamples,
 
             // bump write count
             ++element->meta.nof_sf;
-#if 0
-            char logbuff[256] = {0};
-            fprintf(stderr,"TX, %ld:%06ld, channel %u, sf_bin %u, %s\n", 
-                    tv_now.tv_sec, tv_now.tv_usec, channel, sf_bin, printMsg(element, logbuff, sizeof(logbuff)));
+#if 1
+            if((element->meta.seqnum % 1000 == 0) && (element->meta.nof_bytes > 0))
+             {
+              char logbuff[256] = {0};
+
+              fprintf(stderr,"TX, %ld:%06ld, channel %u, sf_bin %u, %s\n", 
+                      tv_now.tv_sec, tv_now.tv_usec, channel, sf_bin, printMsg(element, logbuff, sizeof(logbuff)));
+             }
 #endif
           }
         }
