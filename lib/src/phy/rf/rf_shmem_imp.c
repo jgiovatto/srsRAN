@@ -949,7 +949,7 @@ int rf_shmem_recv_with_time_multi(void *h, void **data, uint32_t nsamples,
           {
             // get the rx element
             rf_shmem_element_t * element = &_state->rx_segment[channel]->elements[sf_bin];
-#if 1
+#if 0
             if((element->meta.seqnum % 1000 == 0) && (element->meta.nof_bytes > 0))
              {
                char logbuff[256] = {0};
@@ -1122,7 +1122,7 @@ int rf_shmem_send_timed_multi(void *h, void *data[4], int nsamples,
 
             // bump write count
             ++element->meta.nof_sf;
-#if 1
+#if 0
             if((element->meta.seqnum % 1000 == 0) && (element->meta.nof_bytes > 0))
              {
               char logbuff[256] = {0};
