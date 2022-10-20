@@ -1,6 +1,6 @@
 The demo experiments use lxc containers for each UE, eNB, EPC and MBMS application instance.
 
-The UE and eNB communicate via a shared memory address space using the shmem rf device or zmq rf.
+The UE and eNB communicate via a shared memory address space using the shmem rf device or via sockets when using zmq rf.
 
 The eNB commiuncates with the EPC and MBMS via ethnet bridge interface.
 

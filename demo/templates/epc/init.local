@@ -11,9 +11,9 @@ echo "start_time: $start_time"
 cd "$top_dir/$node_name"
 
 # start the epc for unicast 
-srsepc epc.conf
+nohup srsepc epc.conf &
 
 sleep 2
 
 # start the mbms for broad/multicast
-srsmbms mbms.conf
+nohup srsmbms mbms.conf &

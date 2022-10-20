@@ -16,4 +16,4 @@ rm -f .ctxt
 
 sleep 10
 
-srsue ue.conf
+nohup srsue ue.conf &
