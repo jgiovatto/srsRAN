@@ -29,7 +29,7 @@ Run 'tree' to view the generated config files.
 .
 ├── bootstrap.cfg
 ├── enb-01
-│   ├── drb.conf
+│   ├── rb.conf
 │   ├── enb.conf
 │   ├── init
 │   ├── init.local
