@@ -19,7 +19,8 @@
 #    domain: core,sbi,nrf,event,mem,sock
 #
 logger:
-    file: /var/log/open5gs/nrf.log
+    file: ${__top_dir}/persist/${__node_name}/var/log/nrf.log
+    level: info
 
 #
 # nrf:

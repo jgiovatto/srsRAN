@@ -21,8 +21,9 @@ db_uri: mongodb://localhost/open5gs
 #    domain: core,sbi,bsf,event,tlv,mem,sock
 #
 logger:
-    file: /var/log/open5gs/bsf.log
-#
+    file: ${__top_dir}/persist/${__node_name}/var/log/bsf.log
+    level: info
+
 # bsf:
 #
 #  <SBI Server>

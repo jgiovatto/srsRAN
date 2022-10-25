@@ -19,7 +19,8 @@
 #    domain: core,pfcp,gtp,upf,event,tlv,mem,sock
 #
 logger:
-    file: /var/log/open5gs/upf.log
+    file: ${__top_dir}/persist/${__node_name}/var/log/upf.log
+    level: info
 
 #
 # upf:
@@ -168,10 +169,10 @@ upf:
     pfcp:
       - addr: 127.0.0.7
     gtpu:
-      - addr: 127.0.0.2
+      - addr: 127.0.0.7
     subnet:
-      - addr: 172.16.0.101/16
-#     - addr: 2001:db8:cafe::1/48
+      - addr: 10.45.0.1/16
+      - addr: 2001:db8:cafe::1/48
 
 #
 # smf:

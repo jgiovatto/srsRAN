@@ -20,7 +20,8 @@ db_uri: mongodb://localhost/open5gs
 #    level: trace
 #    domain: core,fd,pcrf,event,mem,sock
 logger:
-    file: /var/log/open5gs/pcrf.log
+    file: ${__top_dir}/persist/${__node_name}/var/log/pcrf.log
+    level: info
 
 pcrf:
     freeDiameter: /etc/freeDiameter/pcrf.conf

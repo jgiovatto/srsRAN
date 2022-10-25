@@ -1,0 +1,47 @@
+#!/bin/bash -
+
+top_dir=$1
+node_name=$2
+start_time=$3
+
+echo "top_dir: $top_dir"
+echo "node_name: $node_name"
+echo "start_time: $start_time"
+
+working_dir="$top_dir/$node_name"
+
+cd $working_dir
+
+# create tun interface -3 implies tun device
+# typically created by systemd/network/99-open5gs.net*
+
+tunctl -3 -t ${tun_device_name}
+
+ifconfig ${tun_device_name} up
+
+ifconfig ${tun_device_name} ${tun_device_addr}
+
+# start mongodb and run in the background
+mongod --config $working_dir/mongodb.conf --fork
+
+sleep 5
+
+# start open5gs and run in the background
+open5gs-mmed  -c $working_dir/mme.yaml  -D
+open5gs-nrfd  -c $working_dir/nrf.yaml  -D
+open5gs-sgwcd -c $working_dir/sgwc.yaml -D
+open5gs-smfd  -c $working_dir/smf.yaml  -D
+open5gs-amfd  -c $working_dir/amf.yaml  -D
+open5gs-sgwud -c $working_dir/sgwu.yaml -D
+open5gs-upfd  -c $working_dir/upf.yaml  -D
+open5gs-hssd  -c $working_dir/hss.yaml  -D
+open5gs-pcrfd -c $working_dir/pcrf.yaml -D
+open5gs-ausfd -c $working_dir/ausf.yaml -D
+open5gs-udmd  -c $working_dir/udm.yaml  -D
+open5gs-pcfd  -c $working_dir/pcf.yaml  -D
+open5gs-nssfd -c $working_dir/nssf.yaml -D
+open5gs-bsfd  -c $working_dir/bsf.yaml  -D
+open5gs-udrd  -c $working_dir/udr.yaml  -D
+
+# start the mbms for broad/multicast and run in the background
+# nohup srsmbms mbms.conf &

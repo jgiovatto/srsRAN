@@ -11,5 +11,6 @@ echo "start_time: $start_time"
 cd "$top_dir/$node_name"
 
 # delay enb startup so that epc is ready for S1 connection
-sleep 5
+sleep 20
+
 nohup srsenb enb.conf &

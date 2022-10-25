@@ -19,7 +19,9 @@
 #    domain: core,pfcp,fd,pfcp,gtp,smf,event,tlv,mem,sock
 #
 logger:
-    file: /var/log/open5gs/smf.log
+    file: ${__top_dir}/persist/${__node_name}/var/log/smf.log
+    level: info
+
 #
 # smf:
 #
@@ -424,7 +426,7 @@ smf:
       - addr: 127.0.0.4
       - addr: ::1
     subnet:
-      - addr: 172.16.0.101/16
+      - addr: 10.45.0.1/16
       - addr: 2001:db8:cafe::1/48
     dns:
       - 8.8.8.8

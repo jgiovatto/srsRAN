@@ -16,12 +16,13 @@
 #
 #  o Set OGS_LOG_TRACE to all domain level
 #    level: trace
-#    domain: core,sbi,udm,event,tlv,mem,sock
+#    domain: core,sbi,ausf,event,tlv,mem,sock
 #
 logger:
-    file: /var/log/open5gs/udm.log
-#
-# udm:
+    file: ${__top_dir}/persist/${__node_name}/var/log/ausf.log
+    level: info
+
+# ausf:
 #
 #  <SBI Server>
 #
@@ -38,24 +39,24 @@ logger:
 #  o SBI Server(https://<all address available>:443)
 #    sbi:
 #      - tls:
-#          key: udm.key
-#          pem: udm.pem
+#          key: ausf.key
+#          pem: ausf.pem
 #
-#  o SBI Server(https://127.0.0.12:443, http://[::1]:80)
+#  o SBI Server(https://127.0.0.11:443, http://[::1]:80)
 #    sbi:
-#      - addr: 127.0.0.12
+#      - addr: 127.0.0.11
 #        tls:
-#          key: udm.key
-#          pem: udm.pem
+#          key: ausf.key
+#          pem: ausf.pem
 #      - addr: ::1
 #
-#  o SBI Server(http://udm.open5gs.org:80)
+#  o SBI Server(http://ausf.open5gs.org:80)
 #    sbi:
-#      - name: udm.open5gs.org
+#      - name: ausf.open5gs.org
 #
-#  o SBI Server(http://127.0.0.12:7777)
+#  o SBI Server(http://127.0.0.11:7777)
 #    sbi:
-#      - addr: 127.0.0.12
+#      - addr: 127.0.0.11
 #        port: 7777
 #
 #  o SBI Server(http://<eth0 IP address>:80)
@@ -65,7 +66,7 @@ logger:
 #  o Provide custom SBI address to be advertised to NRF
 #    sbi:
 #      - dev: eth0
-#        advertise: open5gs-udm.svc.local
+#        advertise: open5gs-ausf.svc.local
 #
 #    sbi:
 #      - addr: localhost
@@ -78,7 +79,7 @@ logger:
 #    - so_linger.l_onoff : false
 #
 #    sbi:
-#      addr: 127.0.0.12
+#      addr: 127.0.0.11
 #      option:
 #        tcp_nodelay: false
 #        so_linger:
@@ -92,22 +93,20 @@ logger:
 #
 #  o NF Service Name(Only some NF services are available)
 #    service_name:
-#      - nudm-sdm
-#      - nudm-uecm
-#      - nudm-ueau
+#      - nausf-auth
 #
 #  <NF Discovery Query Parameter>
 #
 #  o (Default) If you do not set Query Parameter as shown below,
 #
 #    sbi:
-#      - addr: 127.0.0.12
+#      - addr: 127.0.0.11
 #        port: 7777
 #
 #    - 'service-names' is included.
 #
 #    sbi:
-#      - addr: 127.0.0.12
+#      - addr: 127.0.0.11
 #        port: 7777
 #    discovery:
 #      option:
@@ -120,9 +119,9 @@ logger:
 #      'service-names' is always included in the URI query parameter.
 #    * That is, 'no_service_names' has no effect.
 #
-udm:
+ausf:
     sbi:
-      - addr: 127.0.0.12
+      - addr: 127.0.0.11
         port: 7777
 
 #

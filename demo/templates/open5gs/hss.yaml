@@ -21,7 +21,8 @@ db_uri: mongodb://localhost/open5gs
 #    domain: core,fd,hss,event,mem,sock
 #
 logger:
-    file: /var/log/open5gs/hss.log
+    file: ${__top_dir}/persist/${__node_name}/var/log/hss.log
+    level: info
 
 hss:
     freeDiameter: /etc/freeDiameter/hss.conf
@@ -41,7 +42,6 @@ hss:
 #      prefer_ipv4: true
 #
 parameter:
-#    use_mongodb_change_stream: true
 
 #
 # max:
