@@ -56,9 +56,9 @@ OPC=${usim_op}
 IMSI=${usim_imsi_prefix}
 ADDR=${lan_addr_prefix}
 
-# TODO need to fix imsi length for node ids > 10
-for N in `seq 1 8`; do
-  STR=$(printf "%s%d %s%d %s %s" $IMSI $N $ADDR $N $KEY $OPC)
+# imsi length must be 15 digits
+for N in `seq 1 10`; do
+  STR=$(printf "%s%03d %s%d %s %s" $IMSI $N $ADDR $N $KEY $OPC)
   echo $STR
   open5gs-dbctl add $STR
 done
