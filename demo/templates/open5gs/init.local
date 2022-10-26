@@ -21,10 +21,13 @@ ifconfig ${tun_device_name} up
 
 ifconfig ${tun_device_name} ${tun_device_addr}
 
+# create mongodb dir
+mkdir -p ${__top_dir}/persist/${__node_name}/var/run/mongodb
+
 # start mongodb and run in the background
 mongod --config $working_dir/mongodb.conf --fork
 
-sleep 5
+sleep 1
 
 # start open5gs and run in the background
 open5gs-mmed  -c $working_dir/mme.yaml  -D
@@ -42,6 +45,24 @@ open5gs-pcfd  -c $working_dir/pcf.yaml  -D
 open5gs-nssfd -c $working_dir/nssf.yaml -D
 open5gs-bsfd  -c $working_dir/bsf.yaml  -D
 open5gs-udrd  -c $working_dir/udr.yaml  -D
+
+sleep 1
+
+# populate mongodb
+
+KEY=${usim_k}
+OPC=${usim_op}
+
+IMSI=${usim_imsi_prefix}
+ADDR=${lan_addr_prefix}
+
+# TODO need to fix imsi length for node ids > 10
+for N in `seq 1 8`; do
+  STR=$(printf "%s%d %s%d %s %s" $IMSI $N $ADDR $N $KEY $OPC)
+  echo $STR
+  open5gs-dbctl add $STR
+done
+
 
 # start the mbms for broad/multicast and run in the background
 # nohup srsmbms mbms.conf &
