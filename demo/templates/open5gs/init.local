@@ -65,4 +65,4 @@ done
 
 
 # start the mbms for broad/multicast and run in the background
-# nohup srsmbms mbms.conf &
+nohup srsmbms mbms.conf &
