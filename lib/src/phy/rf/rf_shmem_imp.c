@@ -84,6 +84,8 @@
 #include "srsran/phy/rf/rf.h"
 #include "srsran/phy/resampling/resample_arb.h"
 
+#define RFSHMEM_BASERATE_DEFAULT_HZ (23040000)
+
 // define to allow debug
 #undef RF_SHMEM_DEBUG_MODE
 
@@ -91,11 +93,13 @@
 static bool rf_shmem_log_dbug = true;
 static bool rf_shmem_log_info = true;
 static bool rf_shmem_log_warn = true;
+static bool rf_shmem_log_errr = true;
 static bool rf_shmem_log_cons = true;
 #else
 static bool rf_shmem_log_dbug = false;
 static bool rf_shmem_log_info = true;
 static bool rf_shmem_log_warn = true;
+static bool rf_shmem_log_errr = true;
 static bool rf_shmem_log_cons = true;
 #endif
 
@@ -122,6 +126,7 @@ static char rf_shmem_node_type = ' ';
                                  } while(0);
 
 
+#define RF_SHMEM_ERRR(_fmt, ...) RF_SHMEM_LOG(rf_shmem_log_errr, stderr, 'E', _fmt, ##__VA_ARGS__)
 #define RF_SHMEM_WARN(_fmt, ...) RF_SHMEM_LOG(rf_shmem_log_warn, stderr, 'W', _fmt, ##__VA_ARGS__)
 #define RF_SHMEM_DBUG(_fmt, ...) RF_SHMEM_LOG(rf_shmem_log_dbug, stdout, 'D', _fmt, ##__VA_ARGS__)
 #define RF_SHMEM_INFO(_fmt, ...) RF_SHMEM_LOG(rf_shmem_log_info, stdout, 'I', _fmt, ##__VA_ARGS__)
@@ -148,7 +153,7 @@ typedef struct {
   uint64_t       seqnum;          // seq num
   uint32_t       nof_bytes;       // num bytes
   uint32_t       nof_sf;          // num subframes
-  float          tx_srate;        // tx sample rate
+  uint32_t       srate;           // sample rate
   struct timeval tv_tx_tti;       // tti time (tti + 4)
   struct timeval tv_tx_time;      // actual tx time
   int            is_sob;          // is start of burst
@@ -183,7 +188,7 @@ const char * printMsg(const rf_shmem_element_t * element, char * buff, int buff_
             element->meta.seqnum,
             element->meta.nof_bytes,
             element->meta.nof_sf,
-            element->meta.tx_srate/1e6,
+            element->meta.srate/1e6,
             element->meta.tv_tx_tti.tv_sec,
             element->meta.tv_tx_tti.tv_usec,
             element->meta.is_sob,
@@ -198,28 +203,37 @@ typedef struct {
    uint32_t                  role;      // first enb radio must be role 1 to set up shared memory, all others 0
    double                    rx_gain;
    double                    tx_gain;
-   double                    rx_srate;
-   double                    tx_srate;
+
+   uint32_t                  srate;        // radio rate configured by upper layers
+   uint32_t                  base_srate;
+   uint32_t                  decim_factor; // decimation factor between base_srate used on transport on radio's rate
+
    uint32_t                  rx_freq[SRSRAN_MAX_CHANNELS];
    uint32_t                  tx_freq[SRSRAN_MAX_CHANNELS];
-   double                    clock_rate;
+
    bool                      rx_stream;
    uint64_t                  tx_seqnum;
    pthread_mutex_t           state_lock;
-   struct timeval            tv_sos;      // start of stream
+
+   struct timeval            tv_sos;       // start of stream
    struct timeval            tv_this_tti;
    struct timeval            tv_next_tti;
+
    size_t                    tx_nof_late;
    srsran_rf_info_t          rf_info;
+
    int                       shm_dl_fd[SRSRAN_MAX_CHANNELS];
    int                       shm_ul_fd[SRSRAN_MAX_CHANNELS];
    void *                    shm_dl[SRSRAN_MAX_CHANNELS];         // dl shared mem
    void *                    shm_ul[SRSRAN_MAX_CHANNELS];         // ul shared mem
+
    rf_shmem_segment_t *      rx_segment[SRSRAN_MAX_CHANNELS];     // rx bins
    rf_shmem_segment_t *      tx_segment[SRSRAN_MAX_CHANNELS];     // tx bins
+
    double                    tx_level[SRSRAN_MAX_CHANNELS];       // tx level
    double                    tx_level_adj[SRSRAN_MAX_CHANNELS];   // tx level adjustment (+/-)
    uint32_t                  tx_level_cycle[SRSRAN_MAX_CHANNELS]; // tx level adjustment cycle sec
+
    uint32_t                  nof_channels;                        // num channels
    char                      channels[SRSRAN_MAX_CHANNELS][256];  // shmem channel ids
    bool                      active[SRSRAN_MAX_CHANNELS];         // channel is active
@@ -230,11 +244,10 @@ static rf_shmem_state_t rf_shmem_state = { .role           = 0,
                                            .nodetype       = RF_SHMEM_NTYPE_NONE,
                                            .rx_gain        = 1.0, // non nan
                                            .tx_gain        = 1.0, // non nan
-                                           .rx_srate       = SRSRAN_CS_SAMP_FREQ,
-                                           .tx_srate       = SRSRAN_CS_SAMP_FREQ,
+                                           .base_srate     = RFSHMEM_BASERATE_DEFAULT_HZ,
+                                           .srate          = RFSHMEM_BASERATE_DEFAULT_HZ,
                                            .rx_freq        = {0},
                                            .tx_freq        = {0},
-                                           .clock_rate     = 0.0,
                                            .rx_stream      = false,
                                            .tx_seqnum      = 0,
                                            .state_lock     = PTHREAD_MUTEX_INITIALIZER,
@@ -624,7 +637,11 @@ int rf_shmem_open_multi(char *args, void **h, uint32_t nof_channels)
    if(args && strlen(args))
     {
       char tmp_str[256] = {0};
- 
+
+      // base_srate
+      parse_uint32(args, "base_srate", -1, &state->base_srate);
+      state->srate = state->base_srate;
+  
       parse_string(args, "type", -1, tmp_str);
 
       // get node type
@@ -819,41 +836,55 @@ double rf_shmem_get_tx_gain(void *h)
  }
 
 
-double rf_shmem_set_rx_srate(void *h, double rate)
- {
+double update_rates(void* h, double srate)
+{
    RF_SHMEM_GET_STATE(h);
 
    pthread_mutex_lock(&_state->state_lock);
 
-   if(_state->rx_srate != rate) {
-     RF_SHMEM_INFO("srate %4.2lf MHz to %4.2lf MHz", 
-                   _state->rx_srate / 1e6, rate / 1e6);
+   double ret = 0.0;
+ 
+   // Decimation must be full integer
+   if(((uint64_t)_state->base_srate % (uint64_t)srate) == 0)
+    {
+       const double old_srate = _state->srate;
 
-     _state->rx_srate = rate;
-   }
+       _state->decim_factor = _state->base_srate / srate;
+       _state->srate        = (uint32_t)srate;
+       ret                  = srate;
+
+       RF_SHMEM_INFO("reset sample rate %.2f -> %.2f MHz with a base rate of %.2f MHz (x%d decimation )",
+                     old_srate / 1e6,
+                     srate / 1e6,
+                     _state->base_srate / 1e6,
+                     _state->decim_factor);
+    } 
+   else
+    {
+      RF_SHMEM_ERRR("Error: couldn't update sample rate. %.2f is not divisible by %.2f",
+                    srate / 1e6,
+                    _state->base_srate / 1e6);
+    }
 
    pthread_mutex_unlock(&_state->state_lock);
 
-   return _state->rx_srate;
+   return ret;
+}
+
+
+double rf_shmem_set_rx_srate(void *h, double srate)
+ {
+   RF_SHMEM_INFO("set rx srate %.2f MHz", srate / 1e6);
+
+    return update_rates(h, srate); 
  }
 
 
-double rf_shmem_set_tx_srate(void *h, double rate)
+double rf_shmem_set_tx_srate(void *h, double srate)
  {
-   RF_SHMEM_GET_STATE(h);
+   RF_SHMEM_INFO("set tx srate %.2f MHz", srate / 1e6);
 
-   pthread_mutex_lock(&_state->state_lock);
-
-   if(_state->tx_srate != rate) {
-     RF_SHMEM_INFO("srate %4.2lf MHz to %4.2lf MHz", 
-                   _state->tx_srate / 1e6, rate / 1e6);
-
-     _state->tx_srate = rate;
-   }
-
-   pthread_mutex_unlock(&_state->state_lock);
-
-   return _state->tx_srate;
+   return update_rates(h, srate); 
  }
 
 
@@ -911,7 +942,7 @@ int rf_shmem_recv_with_time_multi(void *h, void **data, uint32_t nsamples,
    pthread_mutex_lock(&_state->state_lock);
 
    // working in units of subframes
-   const int nof_sf = (nsamples / (_state->rx_srate / 1000.0f));
+   const int nof_sf = (nsamples / (_state->srate / 1000.0f));
 
    uint32_t offset[_state->nof_channels];
 
@@ -966,12 +997,40 @@ int rf_shmem_recv_with_time_multi(void *h, void **data, uint32_t nsamples,
                 }
                else
                 {
-                  const int result = rf_shmem_resample(element->meta.tx_srate,
-                                                       _state->rx_srate,
+                  const int result = rf_shmem_resample(element->meta.srate,
+                                                       _state->srate,
                                                        element->iqdata,
                                                        ((uint8_t*)data[channel]) + offset[channel],
                                                        element->meta.nof_bytes);
  
+
+#if 0
+                  // decimate if needed
+                  if(decim_factor != 1) 
+                   {
+                     for(uint32_t c = 0; c < handler->nof_channels; c++)
+                      {
+                       // skip if buffer is not available
+                       if(buffers[c])
+                        {
+                          cf_t* dst = buffers[c];
+                          cf_t* ptr = handler->buffer_decimation[c];
+
+                          for(uint32_t i = 0, n = 0; i < nsamples; i++)
+                           {
+                             // Averaging decimation
+                             cf_t avg = 0.0f;
+                             for(int j = 0; j < decim_factor; j++, n++)
+                              {
+                                avg += ptr[n];
+                              }
+                             dst[i] = avg; // divide by decim_factor later via scale
+                           }
+                        }
+                      }
+                   }
+#endif
+
                   offset[channel] += result;
                 }
              }
@@ -1077,7 +1136,7 @@ int rf_shmem_send_timed_multi(void *h, void *data[4], int nsamples,
                // set meta data
                element->meta.is_sob     = is_sob;
                element->meta.is_eob     = is_eob;
-               element->meta.tx_srate   = _state->tx_srate;
+               element->meta.srate      = _state->srate;
                element->meta.seqnum     = _state->tx_seqnum++;
                element->meta.nof_bytes  = nbytes;
                element->meta.tv_tx_time = tv_now;
@@ -1164,13 +1223,13 @@ rf_dev_t plugin_shmem = {
   .srsran_rf_open_multi              = rf_shmem_open_multi,
   .srsran_rf_close                   = rf_shmem_close,
   .srsran_rf_set_rx_srate            = rf_shmem_set_rx_srate,
+  .srsran_rf_set_tx_srate            = rf_shmem_set_tx_srate,
   .srsran_rf_set_rx_gain             = rf_shmem_set_rx_gain,
   .srsran_rf_set_tx_gain             = rf_shmem_set_tx_gain,
   .srsran_rf_get_rx_gain             = rf_shmem_get_rx_gain,
   .srsran_rf_get_tx_gain             = rf_shmem_get_tx_gain,
   .srsran_rf_get_info                = rf_shmem_get_rf_info,
   .srsran_rf_set_rx_freq             = rf_shmem_set_rx_freq, 
-  .srsran_rf_set_tx_srate            = rf_shmem_set_tx_srate,
   .srsran_rf_set_tx_freq             = rf_shmem_set_tx_freq,
   .srsran_rf_get_time                = rf_shmem_get_time,  
   .srsran_rf_recv_with_time          = rf_shmem_recv_with_time,
