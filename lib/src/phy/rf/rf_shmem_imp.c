@@ -944,14 +944,14 @@ int rf_shmem_recv_with_time_multi(void *h, void **data, uint32_t nsamples,
    // working in units of subframes
    const int nof_sf = (nsamples / (_state->srate / 1000.0f));
 
-   uint32_t offset[_state->nof_channels];
+   cf_t* buffers[SRSRAN_MAX_CHANNELS] = {};
 
    for(uint32_t channel = 0; channel < _state->nof_channels; ++channel)
     {
-      offset[channel] = 0;
-
       // always clear buffer otherwise caller may find stale data
       memset(data[channel], 0x0, RF_SHMEM_BYTES_X_SAMPLE(nsamples));
+
+      buffers[channel] = data[channel];
     }
 
    struct timeval tv_now;
@@ -997,41 +997,36 @@ int rf_shmem_recv_with_time_multi(void *h, void **data, uint32_t nsamples,
                 }
                else
                 {
-                  const int result = rf_shmem_resample(element->meta.srate,
-                                                       _state->srate,
-                                                       element->iqdata,
-                                                       ((uint8_t*)data[channel]) + offset[channel],
-                                                       element->meta.nof_bytes);
+#if 1
+                  rf_shmem_resample(element->meta.srate,
+                                    _state->srate,
+                                    element->iqdata,
+                                    buffers[channel],
+                                    element->meta.nof_bytes);
  
+#else
+                  uint32_t decim_factor      = _state->decim_factor;
+                  uint32_t nbytes            = NSAMPLES2NBYTES(nsamples * decim_factor);
+                  uint32_t nsamples_baserate = nsamples * decim_factor;
 
-#if 0
                   // decimate if needed
                   if(decim_factor != 1) 
                    {
-                     for(uint32_t c = 0; c < handler->nof_channels; c++)
-                      {
-                       // skip if buffer is not available
-                       if(buffers[c])
-                        {
-                          cf_t* dst = buffers[c];
-                          cf_t* ptr = handler->buffer_decimation[c];
+                     cf_t* dst = (cf_t*)(((uint8_t*)data[ch]) + d_off[ch]);
+                     cf_t* ptr = element->iqdata;
 
-                          for(uint32_t i = 0, n = 0; i < nsamples; i++)
+                     for(uint32_t i = 0, n = 0; i < nsamples; i++)
+                       {
+                         // Averaging decimation
+                         cf_t avg = 0.0f;
+                         for(int j = 0; j < decim_factor; j++, n++)
                            {
-                             // Averaging decimation
-                             cf_t avg = 0.0f;
-                             for(int j = 0; j < decim_factor; j++, n++)
-                              {
-                                avg += ptr[n];
-                              }
-                             dst[i] = avg; // divide by decim_factor later via scale
+                             avg += ptr[n];
                            }
-                        }
-                      }
+                          dst[i] = avg; // divide by decim_factor later via scale
+                       }
                    }
 #endif
-
-                  offset[channel] += result;
                 }
              }
 
