@@ -324,14 +324,32 @@ static int rf_shmem_resample(double msg_srate,
 
   int ret = 0;
 
-#define USE_RESAMPLE_ARB
-#ifdef  USE_RESAMPLE_ARB
   if((int) decim_factor != 1)
    {
+#if 0
      srsran_resample_arb_t r;
      srsran_resample_arb_init(&r, 1.0/decim_factor, 0);
 
      ret = srsran_resample_arb_compute(&r, src, &dst[count], nsamples);
+#else
+     if((int) decim_factor != 1) 
+     {
+       cf_t* ptr = src;
+
+       for(int i = 0, n = 0; i < nsamples; i++)
+        {
+          // Avg decimation
+          cf_t avg = 0.0f;
+          for(int j = 0; j < decim_factor; j++, n++)
+           {
+             avg += ptr[n];
+           }
+         dst[i+count] = avg; // divide by decim_factor later via scale
+       }
+    
+       ret = nsamples;
+     }
+#endif
 
 #if 0
      RF_SHMEM_CONS("msg_srate %.2f, srate %.2f, nsamples %d, decim_factor %.2f, ret %d, count %d", 
@@ -345,33 +363,6 @@ static int rf_shmem_resample(double msg_srate,
 
      ret = nsamples;
    }
-#else
-    // decimate if needed
-    if((int) decim_factor != 1) 
-     {
-       cf_t* ptr = src;
-
-       for(uint32_t i = 0, n = 0; i < nsamples; i++)
-        {
-          // Averaging decimation
-          cf_t avg = 0.0f;
-          for(int j = 0; j < decim_factor; j++, n++)
-           {
-             avg += ptr[n];
-           }
-         dst[i+count] = avg; // divide by decim_factor later via scale
-       }
-    
-       ret = nsamples;
-    }
-  else
-   {
-     // no resampling needed, just copy all bytes
-     memcpy(dst, src, NUMBYTESPERSAMPLE(nsamples));
-
-     ret = nsamples;
-   }
-#endif
 
    return ret; 
 }
