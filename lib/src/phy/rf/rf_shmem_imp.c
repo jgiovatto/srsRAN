@@ -139,11 +139,12 @@ static char rf_shmem_node_type = ' ';
 #define RF_SHMEM_NTYPE_UE    (1)  
 #define RF_SHMEM_NTYPE_ENB   (2)
 
-#define RF_SHMEM_NUM_SF_X_FRAME 10
+#define NUMSFPERFRAME 10
 
+static const time_t sf_usec         = 1000;
 static const struct timeval tv_zero = {0,0};
-static const struct timeval tv_sf   = {0,1000}; // 1 sf
-static const struct timeval tv_4sf  = {0,4000}; // 4 sf
+static const struct timeval tv_sf   = {0,sf_usec};   // 1 sf
+static const struct timeval tv_4sf  = {0,4*sf_usec}; // 4 sf
 
 // msg element meta data
 typedef struct {
@@ -161,7 +162,7 @@ typedef struct {
 
 // subtract the other fields of the struct to align mem size to 256k per sf_bin
 // to avoid shmget failure
-#define RF_SHMEM_MAX_CF_LEN NUMSAMPLESPERBYTE((10*256000 - sizeof(rf_shmem_element_meta_t)))
+#define RF_SHMEM_MAX_CF_LEN NUMSAMPLESPERBYTE((256000 - sizeof(rf_shmem_element_meta_t)))
 
 // msg element (not for stack allocation)
 typedef struct {
@@ -169,16 +170,16 @@ typedef struct {
   cf_t                    iqdata[RF_SHMEM_MAX_CF_LEN]; // data
 } rf_shmem_element_t;
 
-sem_t * sem[RF_SHMEM_NUM_SF_X_FRAME] = {NULL};  // element r/w sf_bin locks
+sem_t * sem[NUMSFPERFRAME] = {NULL};  // element r/w sf_bin locks
 
 // msg element bins 1 for each sf (tti)
 typedef struct {
-  rf_shmem_element_t elements[RF_SHMEM_NUM_SF_X_FRAME];
+  rf_shmem_element_t elements[NUMSFPERFRAME];
 } rf_shmem_segment_t;
 
 #define RF_SHMEM_DATA_SEGMENT_SIZE sizeof(rf_shmem_segment_t)
 
-const char * printMsg(const rf_shmem_element_t * element, char * buff, int buff_len)
+const char * printMeta(const rf_shmem_element_t * element, char * buff, int buff_len)
  {
    snprintf(buff, buff_len, "seqnum %05lu, nsamples %u, nof_sf %u, srate %6.4f MHz, tti_tx %ld:%06ld, sob %d, eob %d",
             element->meta.m_seqnum,
@@ -272,7 +273,7 @@ static inline time_t tv_to_usec(const struct timeval * tv)
 
 static inline uint32_t get_sf_bin(const struct timeval * tv)
  {
-   return (tv_to_usec(tv) / tv_to_usec(&tv_sf)) % RF_SHMEM_NUM_SF_X_FRAME;
+   return (tv_to_usec(tv) / sf_usec) % NUMSFPERFRAME;
  }
 
 
@@ -326,7 +327,7 @@ static int rf_shmem_resample(double msg_srate,
 
   if((int) decim_factor != 1)
    {
-#if 0
+#if 1
      srsran_resample_arb_t r;
      srsran_resample_arb_init(&r, 1.0/decim_factor, 0);
 
@@ -342,7 +343,7 @@ static int rf_shmem_resample(double msg_srate,
           cf_t avg = 0.0f;
           for(int j = 0; j < decim_factor; j++, n++)
            {
-             avg += ptr[n];
+             avg += ptr[n]; // XXX need to check memory location overrun
            }
          dst[i+count] = avg; // divide by decim_factor later via scale
        }
@@ -469,7 +470,7 @@ static int rf_shmem_open_ipc(rf_shmem_state_t * state, uint32_t channel)
 
 
   // shared sems, 1 for each sf_bin
-  for(int sf = 0; sf < RF_SHMEM_NUM_SF_X_FRAME; ++sf)
+  for(int sf = 0; sf < NUMSFPERFRAME; ++sf)
    {
      snprintf(shmem_name, sizeof(shmem_name), RF_SHMEM_SEM_FMT, state->channels[channel], sf);
 
@@ -573,6 +574,7 @@ int rf_shmem_start_rx_stream(void *h, bool now)
 
    // initial tti and next
    _state->tv_this_tti = _state->tv_sos;
+
    timeradd(&_state->tv_sos, &tv_sf, &_state->tv_next_tti);
 
    RF_SHMEM_INFO("start rx stream, time_0 %ld:%06ld, next_tti %ld:%06ld", 
@@ -771,7 +773,7 @@ int rf_shmem_close(void *h)
           }
        }
 
-      for(int sf = 0; sf < RF_SHMEM_NUM_SF_X_FRAME; ++sf)
+      for(int sf = 0; sf < NUMSFPERFRAME; ++sf)
        {
          if(sem[sf])
           {
@@ -948,13 +950,12 @@ int rf_shmem_recv_with_time_multi(void *h, void **data, uint32_t nsamples,
       buffers[channel] = data[channel];
     }
 
-   struct timeval tv_now;
-
    int count = 0;
 
    // for each requested subframe
    for(int sf = 0; sf < nof_sf; ++sf)
     { 
+      struct timeval tv_now;
       gettimeofday(&tv_now, NULL);
 
       // wait for the next tti
@@ -976,29 +977,30 @@ int rf_shmem_recv_with_time_multi(void *h, void **data, uint32_t nsamples,
           {
             // get the rx element
             rf_shmem_element_t * element = &_state->rx_segment[channel]->elements[sf_bin];
-#if 0
-            if(element->meta.m_nsamples > 0)
-             {
-               char logbuff[256] = {0};
-               fprintf(stderr,"RX, %ld:%06ld, channel %u, sf_bin %u, nof_sf %d, %s\n", 
-                       tv_now.tv_sec, tv_now.tv_usec, channel, sf_bin, nof_sf, printMsg(element, logbuff, sizeof(logbuff)));
-             }
-#endif
+
             // check current tti w/sf_bin tti 
             if(timercmp(&_state->tv_this_tti, &element->meta.m_tv_tx_tti, ==))
              {
-               if(element->meta.m_nsamples && (element->meta.m_tx_freq != _state->rx_freq[channel]))
+               if((element->meta.m_nsamples > 0) && (element->meta.m_tx_freq != _state->rx_freq[channel]))
                 {
                   RF_SHMEM_INFO("tx_freq %u != our rx_freq %u", element->meta.m_tx_freq, _state->rx_freq[channel]);
                 }
                else
                 {
-                  count += rf_shmem_resample(element->meta.m_srate,
-                                             _state->srate,
-                                             element->iqdata,
-                                             buffers[channel],
-                                             element->meta.m_nsamples,
-                                             count);
+                  if(element->meta.m_nsamples > 0)
+                   {
+ #if 0
+                     char logbuff[256] = {0};
+                     fprintf(stderr,"RX, %ld:%06ld, channel %u, sf_bin %u, nof_sf %d, %s\n", 
+                             tv_now.tv_sec, tv_now.tv_usec, channel, sf_bin, nof_sf, printMeta(element, logbuff, sizeof(logbuff)));
+#endif
+                     count += rf_shmem_resample(element->meta.m_srate,
+                                                _state->srate,
+                                                element->iqdata,
+                                                buffers[channel],
+                                                element->meta.m_nsamples,
+                                                count);
+                   }
                 }
              }
 
@@ -1018,6 +1020,7 @@ int rf_shmem_recv_with_time_multi(void *h, void **data, uint32_t nsamples,
 
    pthread_mutex_unlock(&_state->state_lock);
 
+   // retrun 0 will lockup the rx thread
    return nsamples;
  }
 
@@ -1146,14 +1149,11 @@ int rf_shmem_send_timed_multi(void *h, void *data[4], int nsamples,
 
             // bump write count
             ++element->meta.m_nsf;
-#if 0
-            if((element->meta.m_seqnum % 1000 == 0) && (element->meta.nsamples > 0))
-             {
-              char logbuff[256] = {0};
 
-              fprintf(stderr,"TX, %ld:%06ld, channel %u, sf_bin %u, %s\n", 
-                      tv_now.tv_sec, tv_now.tv_usec, channel, sf_bin, printMsg(element, logbuff, sizeof(logbuff)));
-             }
+#if 0
+            char logbuff[256] = {0};
+            fprintf(stderr,"TX, %ld:%06ld, channel %u, sf_bin %u, %s\n", 
+                    tv_now.tv_sec, tv_now.tv_usec, channel, sf_bin, printMeta(element, logbuff, sizeof(logbuff)));
 #endif
           }
         }
