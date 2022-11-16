@@ -1,0 +1,39 @@
+diff --git a/lib/src/phy/rf/rf_zmq_imp.c b/lib/src/phy/rf/rf_zmq_imp.c
+index 1b672799e..76312004c 100644
+--- a/lib/src/phy/rf/rf_zmq_imp.c
++++ b/lib/src/phy/rf/rf_zmq_imp.c
+@@ -848,6 +848,9 @@ int rf_zmq_send_timed(void*  h,
+       h, _data, nsamples, secs, frac_secs, has_time_spec, blocking, is_start_of_burst, is_end_of_burst);
+ }
+ 
++time_t start_time = 0;
++bool tx_on = true;
++
+ // TODO: Implement Tx upsampling
+ int rf_zmq_send_timed_multi(void*  h,
+                             void*  data[4],
+@@ -973,10 +976,20 @@ int rf_zmq_send_timed_multi(void*  h,
+         // Scale according to current gain
+         srsran_vec_sc_prod_cfc(buf, tx_gain, buf, nsamples_baseband);
+ 
+-        // Finally, transmit baseband
+-        int n = rf_zmq_tx_baseband(&handler->transmitter[i], buf, nsamples_baseband);
+-        if (n == SRSRAN_ERROR) {
+-          goto clean_exit;
++        if(start_time == 0)
++          start_time = time(NULL);
++
++        time_t dt = time(NULL)-start_time;
++        if((strcmp(handler->id, "enb") == 0) && ((dt > 60) && (dt < 300))) // enb tx on/off
++         {
++           rf_zmq_tx_zeros(&handler->transmitter[i], nsamples_baseband); if(tx_on == true) { fprintf(stderr, "!!!!!!  TX OFF !!!!!!"); tx_on = false; } // sending Zeros
++         }
++        else {
++          // Finally, transmit baseband
++          int n = rf_zmq_tx_baseband(&handler->transmitter[i], buf, nsamples_baseband); if(tx_on == false) { fprintf(stderr, "!!!!! TX ON !!!!!"); tx_on = true; start_time = 0;} // sending Baseband
++          if (n == SRSRAN_ERROR) {
++            goto clean_exit;
++          }
+         }
+       } else {
+         int n = rf_zmq_tx_zeros(&handler->transmitter[i], nsamples_baseband);
