@@ -781,14 +781,16 @@ void phy_common::update_measurements(uint32_t                     cc_idx,
     ch.sync_err     = chest_res.sync_error;
 
     // added log to track rssi etc
-    logger.info("cc_idx %d, noise %3.3f, rsrp %3.3f, rsrq %3.3f, rssi %3.3f, pathloss %3.3f, sinr % 3.3f, sync_err %f",
+    logger.info("cc_idx %d, noise %3.3f, rsrp %3.3f, rsrq %3.3f, rssi %3.3f, tx_power %3.2f, pathloss %3.3f, sinr %3.3f, snr %3.3f, sync_err %f",
                 cc_idx,
                 ch.n,
                 ch.rsrp,
                 ch.rsrq,
                 ch.rssi,
+                tx_crs_power,
                 ch.pathloss,
                 ch.sinr,
+                avg_snr_db[cc_idx],
                 ch.sync_err);
 
     set_ch_metrics(cc_idx, ch);
