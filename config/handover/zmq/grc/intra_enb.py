@@ -20,6 +20,7 @@ if __name__ == '__main__':
         except:
             print("Warning: failed to XInitThreads()")
 
+from gnuradio import analog
 from gnuradio import blocks
 from gnuradio import gr
 from gnuradio.filter import firdes
@@ -75,12 +76,16 @@ class intra_enb(gr.top_block, Qt.QWidget):
         # Variables
         ##################################################
         self.samp_rate = samp_rate = 1.92e6
+        self.noise_0 = noise_0 = 0
         self.cell_gain1 = cell_gain1 = 0
         self.cell_gain0 = cell_gain0 = 1
 
         ##################################################
         # Blocks
         ##################################################
+        self._noise_0_range = Range(0, 1, 0.1, 0, 200)
+        self._noise_0_win = RangeWidget(self._noise_0_range, self.set_noise_0, "'noise_0'", "counter_slider", float, QtCore.Qt.Horizontal)
+        self.top_layout.addWidget(self._noise_0_win)
         self._cell_gain1_range = Range(0, 1, 0.1, 0, 200)
         self._cell_gain1_win = RangeWidget(self._cell_gain1_range, self.set_cell_gain1, "'cell_gain1'", "counter_slider", float, QtCore.Qt.Horizontal)
         self.top_layout.addWidget(self._cell_gain1_win)
@@ -94,17 +99,21 @@ class intra_enb(gr.top_block, Qt.QWidget):
         self.zeromq_rep_sink_1 = zeromq.rep_sink(gr.sizeof_gr_complex, 1, 'tcp://*:2100', 100, False, (-1))
         self.zeromq_rep_sink_0 = zeromq.rep_sink(gr.sizeof_gr_complex, 1, 'tcp://*:2000', 100, False, (-1))
         self.blocks_throttle_0 = blocks.throttle(gr.sizeof_gr_complex*1, samp_rate,True)
+        self.blocks_multiply_const_vxx_0_1 = blocks.multiply_const_cc(noise_0)
         self.blocks_multiply_const_vxx_0_0 = blocks.multiply_const_cc(cell_gain1)
         self.blocks_multiply_const_vxx_0 = blocks.multiply_const_cc(cell_gain0)
         self.blocks_add_xx_0 = blocks.add_vcc(1)
+        self.analog_noise_source_x_0 = analog.noise_source_c(analog.GR_GAUSSIAN, 2, 0)
 
 
         ##################################################
         # Connections
         ##################################################
+        self.connect((self.analog_noise_source_x_0, 0), (self.blocks_multiply_const_vxx_0_1, 0))
         self.connect((self.blocks_add_xx_0, 0), (self.zeromq_rep_sink_0, 0))
         self.connect((self.blocks_multiply_const_vxx_0, 0), (self.blocks_add_xx_0, 0))
         self.connect((self.blocks_multiply_const_vxx_0_0, 0), (self.blocks_add_xx_0, 1))
+        self.connect((self.blocks_multiply_const_vxx_0_1, 0), (self.blocks_add_xx_0, 2))
         self.connect((self.blocks_throttle_0, 0), (self.zeromq_rep_sink_1, 0))
         self.connect((self.blocks_throttle_0, 0), (self.zeromq_rep_sink_1_0, 0))
         self.connect((self.zeromq_req_source_0, 0), (self.blocks_multiply_const_vxx_0, 0))
@@ -126,6 +135,13 @@ class intra_enb(gr.top_block, Qt.QWidget):
     def set_samp_rate(self, samp_rate):
         self.samp_rate = samp_rate
         self.blocks_throttle_0.set_sample_rate(self.samp_rate)
+
+    def get_noise_0(self):
+        return self.noise_0
+
+    def set_noise_0(self, noise_0):
+        self.noise_0 = noise_0
+        self.blocks_multiply_const_vxx_0_1.set_k(self.noise_0)
 
     def get_cell_gain1(self):
         return self.cell_gain1

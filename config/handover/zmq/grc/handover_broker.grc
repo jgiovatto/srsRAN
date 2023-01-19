@@ -75,6 +75,27 @@ blocks:
     coordinate: [746, 5]
     rotation: 0
     state: true
+- name: noise_0
+  id: variable_qtgui_range
+  parameters:
+    comment: ''
+    gui_hint: ''
+    label: ''
+    min_len: '200'
+    orient: QtCore.Qt.Horizontal
+    rangeType: float
+    start: '0'
+    step: '0.1'
+    stop: '1'
+    value: '0'
+    widget: counter_slider
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [880, 4.0]
+    rotation: 0
+    state: true
 - name: samp_rate
   id: variable
   parameters:
@@ -87,6 +108,25 @@ blocks:
     coordinate: [180, 19]
     rotation: 0
     state: enabled
+- name: analog_noise_source_x_0
+  id: analog_noise_source_x
+  parameters:
+    affinity: ''
+    alias: ''
+    amp: '2'
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    noise_type: analog.GR_GAUSSIAN
+    seed: '0'
+    type: complex
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [216, 436.0]
+    rotation: 0
+    state: true
 - name: blocks_add_xx_0
   id: blocks_add_xx
   parameters:
@@ -95,14 +135,14 @@ blocks:
     comment: ''
     maxoutbuf: '0'
     minoutbuf: '0'
-    num_inputs: '2'
+    num_inputs: '3'
     type: complex
     vlen: '1'
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [876, 261]
+    coordinate: [832, 264.0]
     rotation: 0
     state: true
 - name: blocks_multiply_const_vxx_0
@@ -120,7 +160,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [693, 196]
+    coordinate: [472, 196.0]
     rotation: 0
     state: true
 - name: blocks_multiply_const_vxx_0_0
@@ -138,7 +178,25 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [698, 348]
+    coordinate: [488, 340.0]
+    rotation: 0
+    state: true
+- name: blocks_multiply_const_vxx_0_1
+  id: blocks_multiply_const_vxx
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    const: noise_0
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    type: complex
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [488, 436.0]
     rotation: 0
     state: true
 - name: blocks_throttle_0
@@ -157,7 +215,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [683, 525]
+    coordinate: [688, 604.0]
     rotation: 0
     state: true
 - name: zeromq_rep_sink_0
@@ -176,7 +234,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [975, 257]
+    coordinate: [976, 268.0]
     rotation: 0
     state: true
 - name: zeromq_rep_sink_1
@@ -195,7 +253,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [965, 454]
+    coordinate: [976, 484.0]
     rotation: 0
     state: true
 - name: zeromq_rep_sink_1_0
@@ -214,7 +272,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [967, 540]
+    coordinate: [976, 620.0]
     rotation: 0
     state: true
 - name: zeromq_req_source_0
@@ -235,7 +293,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [424, 188.0]
+    coordinate: [192, 180.0]
     rotation: 0
     state: true
 - name: zeromq_req_source_0_0
@@ -256,7 +314,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [430, 325]
+    coordinate: [200, 332.0]
     rotation: 0
     state: true
 - name: zeromq_req_source_1
@@ -277,14 +335,16 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [432, 509]
+    coordinate: [416, 628.0]
     rotation: 0
     state: true
 
 connections:
+- [analog_noise_source_x_0, '0', blocks_multiply_const_vxx_0_1, '0']
 - [blocks_add_xx_0, '0', zeromq_rep_sink_0, '0']
 - [blocks_multiply_const_vxx_0, '0', blocks_add_xx_0, '0']
 - [blocks_multiply_const_vxx_0_0, '0', blocks_add_xx_0, '1']
+- [blocks_multiply_const_vxx_0_1, '0', blocks_add_xx_0, '2']
 - [blocks_throttle_0, '0', zeromq_rep_sink_1, '0']
 - [blocks_throttle_0, '0', zeromq_rep_sink_1_0, '0']
 - [zeromq_req_source_0, '0', blocks_multiply_const_vxx_0, '0']
