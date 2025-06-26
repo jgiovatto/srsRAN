@@ -225,8 +225,9 @@ public:
     if (this == &other) {
       return *this;
     }
+    const auto len = std::min(other.size(), size_); // XXX_JG added due to resize warnings
     resize(other.size());
-    std::copy(&other[0], &other[size_], data_);
+    std::copy(&other[0], &other[len], data_);
     return *this;
   }
   void resize(uint32_t new_size, uint32_t new_cap = 0)
@@ -240,12 +241,14 @@ public:
     }
 
     T* old_data = data_;
+    const auto old_cap = cap_; // XXX_JG added due to resize warning
     cap_        = new_size > new_cap ? new_size : new_cap;
     if (cap_ > 0) {
       data_ = new T[cap_];
       if (old_data != NULL) {
         srsran_assert(cap_ > size_, "Old size larger than new capacity in dyn_array\n");
-        std::copy(&old_data[0], &old_data[size_], data_);
+        auto len = std::min(cap_, old_cap);
+        std::copy(&old_data[0], &old_data[len], data_);
       }
     } else {
       data_ = NULL;
