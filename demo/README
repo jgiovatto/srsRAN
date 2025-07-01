@@ -17,7 +17,7 @@ other configuration can be found in the templates directory.
 The supplied demo.env will allow each demo experiment to run without installing and of the applications in this project,
 it basically sets you PATH and LD_LIBRARY_PATH env variables.
 
-The default cmake build target directory is "build_fauxrf" change this in the demo.env if needed or create a symlink etc.
+The default cmake build target directory is "build" change this in the demo.env if needed or create a symlink etc.
 To build the experiment configuration just run 'make'.
 
 Directory zmq will have 2 demos, 
@@ -146,3 +146,53 @@ To stop and experiment run 'letce2 lxc stop'
 To clean the experiment configuration and runtime log files just run 'make clean'.
 
 Note all generated log files are stored in the 'persist' directory.
+
+#########################
+Notes on mongodb:
+
+https://medium.com/@nkav2447/how-to-download-and-install-mongodb-on-fedora-40-2db148a7c2f0
+
+sudo dnf update
+
+sudo rpm --import https://www.mongodb.org/static/pgp/server-7.0.asc
+
+sudo vi /etc/yum.repos.d/mongodb-org-7.0.repo
+
+Add the following content to the file:
+
+[mongodb-org-7.0]
+name=MongoDB Repository
+baseurl=https://repo.mongodb.org/yum/redhat/9/mongodb-org/7.0/x86_64/
+gpgcheck=1
+enabled=1
+gpgkey=https://www.mongodb.org/static/pgp/server-7.0.asc
+
+sudo dnf install mongodb-org mongodb-org-server
+
+if you are facing permission error in /etc/group, the most probable reason is that SELinux (Security-Enhanced Linux) is enabled, so it might be preventing access.
+
+You can temporarily disable SELinux to allow access to /etc/group using the below command, after disabling run the install commands again.
+Note that this command switches SELinux to the Disabled mode. It doesn’t change the permanent SELinux configuration.
+When you reboot your Fedora system, SELinux will automatically return to the mode specified in your configuration file (/etc/selinux/config).
+
+sudo setenforce 0
+
+sudo systemctl enable mongod.service 
+sudo systemctl start mongod.service
+
+sudo systemctl status mongod.service
+
+
+
+#############################
+Notes on mongodb shell upgrade to openssl 3:
+
+sudo yum remove mongodb-mongosh
+sudo yum install mongodb-mongosh-shared-openssl3
+
+
+############################
+Notes on running in VM's containers
+
+https://github.com/s5uishida/open5gs_5gc_srsran_sample_config
+

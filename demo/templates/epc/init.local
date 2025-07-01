@@ -8,6 +8,8 @@ echo "top_dir: $top_dir"
 echo "node_name: $node_name"
 echo "start_time: $start_time"
 
+sudo setcap 'cap_net_admin,cap_net_raw+ep' $(which ping)
+
 cd "$top_dir/$node_name"
 
 # start the epc for unicast 

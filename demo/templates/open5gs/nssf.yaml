@@ -1,267 +1,202 @@
-#
-# logger:
-#
-#  o Set OGS_LOG_INFO to all domain level
-#   - If `level` is omitted, the default level is OGS_LOG_INFO)
-#   - If `domain` is omitted, the all domain level is set from 'level'
-#    (Nothing is needed)
-#
-#  o Set OGS_LOG_ERROR to all domain level
-#   - `level` can be set with none, fatal, error, warn, info, debug, trace
-#    level: error
-#
-#  o Set OGS_LOG_DEBUG to mme/emm domain level
-#    level: debug
-#    domain: mme,emm
-#
-#  o Set OGS_LOG_TRACE to all domain level
-#    level: trace
-#    domain: core,sbi,nssf,event,tlv,mem,sock
-#
 logger:
-    file: ${__top_dir}/persist/${__node_name}/var/log/nssf.log
-    level: info
+    file:
+      path: ${__top_dir}/persist/${__node_name}/var/log/nssf.log
+    level: ${open5gs_log_level}
 
-#
-# nssf:
-#
-#  <SBI Server>
-#
-#  o SBI Server(http://<all address available>:80)
-#    sbi:
-#
-#  o SBI Server(http://<any address>:80)
-#    sbi:
-#      - addr:
-#          - 0.0.0.0
-#          - ::0
-#        port: 7777
-#
-#  o SBI Server(https://<all address available>:443)
-#    sbi:
-#      - tls:
-#          key: nssf.key
-#          pem: nssf.pem
-#
-#  o SBI Server(https://127.0.0.14:443, http://[::1]:80)
-#    sbi:
-#      - addr: 127.0.0.14
-#        tls:
-#          key: nssf.key
-#          pem: nssf.pem
-#      - addr: ::1
-#
-#  o SBI Server(http://nssf.open5gs.org:80)
-#    sbi:
-#      - name: nssf.open5gs.org
-#
-#  o SBI Server(http://127.0.0.14:7777)
-#    sbi:
-#      - addr: 127.0.0.14
-#        port: 7777
-#
-#  o SBI Server(http://<eth0 IP address>:80)
-#    sbi:
-#      - dev: eth0
-#
-#  o Provide custom SBI address to be advertised to NRF
-#    sbi:
-#      - dev: eth0
+global:
+  max:
+    ue: 1024  # The number of UE can be increased depending on memory size.
+#    peer: 64
+
+nssf:
+  sbi:
+    server:
+      - address: 127.0.0.14
+        port: 7777
+    client:
+#      nrf:
+#        - uri: http://127.0.0.10:7777
+      scp:
+        - uri: http://127.0.0.200:7777
+      nsi:
+        - uri: http://127.0.0.10:7777
+          s_nssai:
+            sst: 1
+################################################################################
+# SBI Server
+################################################################################
+#  o Bind to the address on the eth0 and advertise as open5gs-nssf.svc.local
+#  sbi:
+#    server:
+#      - dev:eth0
 #        advertise: open5gs-nssf.svc.local
 #
-#    sbi:
-#      - addr: localhost
-#        advertise:
-#          - 127.0.0.99
-#          - ::1
-#
-#  o SBI Option (Default)
-#    - tcp_nodelay : true
-#    - so_linger.l_onoff : false
-#
-#    sbi:
-#      addr: 127.0.0.14
-#      option:
-#        tcp_nodelay: false
-#        so_linger:
-#          l_onoff: true
-#          l_linger: 10
-#
-#  <List of available Network Slice Instance(NSI)>
-#
-#  o One NSI
-#   - NRF[http://::1:7777/nnrf-nfm/v1/nf-instances]
-#     NSSAI[SST:1]
-#
-#    nsi:
-#      - addr: ::1
+#  o Specify a custom port number 7777 while binding to the given address
+#  sbi:
+#    server:
+#      - address: nssf.localdomain
 #        port: 7777
-#        s_nssai:
-#          sst: 1
 #
-#  o Three NSI
+#  o Bind to 127.0.0.14 and advertise as open5gs-nssf.svc.local
+#  sbi:
+#    server:
+#      - address: 127.0.0.14
+#        port: 7777
+#        advertise: open5gs-nssf.svc.local
+#
+#  o Bind to port 7777 but advertise with a different port number 8888
+#  sbi:
+#    server:
+#      - address: 127.0.0.14
+#        port: 7777
+#        advertise: open5gs-nssf.svc.local:8888
+#
+################################################################################
+# SBI Client
+################################################################################
+#  o Network Slice Instance(NSI)
 #   1. NRF[http://::1:7777/nnrf-nfm/v1/nf-instances]
 #      S-NSSAI[SST:1]
-#
 #   2. NRF[http://127.0.0.19:7777/nnrf-nfm/v1/nf-instances]
 #      NSSAI[SST:1, SD:000080]
-#
-#   2. NRF[http://127.0.0.10:7777/nnrf-nfm/v1/nf-instances]
+#   3. NRF[http://127.0.0.10:7777/nnrf-nfm/v1/nf-instances]
 #      NSSAI[SST:1, SD:009000]
 #
-#    nsi:
-#      - addr: ::1
-#        port: 7777
-#        s_nssai:
-#          sst: 1
-#      - addr: 127.0.0.19
-#        port: 7777
-#        s_nssai:
-#          sst: 1
-#          sd: 000080
-#      - addr: 127.0.0.10
-#        port: 7777
-#        s_nssai:
-#          sst: 1
-#          sd: 009000
+#  sbi:
+#    client:
+#      nsi:
+#        - uri: http://[::1]:7777
+#          s_nssai:
+#            sst: 1
+#        - uri: http://127.0.0.19:7777
+#          s_nssai:
+#            sst: 1
+#            sd: 000080
+#        - uri: http://127.0.0.10:7777
+#          s_nssai:
+#            sst: 1
+#            sd: 009000
 #
-#  o NSI Option (Default)
-#    - tcp_nodelay : true
-#    - so_linger.l_onoff : false
+#  o Direct Communication with NRF
+#  sbi:
+#    client:
+#      nrf:
+#        - uri: http://127.0.0.10:7777
 #
-#    nsi:
-#      addr: ::1
-#      option:
-#        tcp_nodelay: false
-#        so_linger:
-#          l_onoff: true
-#          l_linger: 10
+#  o Indirect Communication by Delegating to SCP
+#  sbi:
+#    client:
+#      scp:
+#        - uri: http://127.0.0.200:7777
 #
-#  <NF Service>
+#  o Indirect Communication without Delegation
+#  sbi:
+#    client:
+#      nrf:
+#        - uri: http://127.0.0.10:7777
+#      scp:
+#        - uri: http://127.0.0.200:7777
+#      delegated:
+#        nrf:
+#          nfm: no    # Directly communicate NRF management functions
+#          disc: no   # Directly communicate NRF discovery
+#        scp:
+#          next: no   # Do not delegate to SCP for next-hop
 #
-#  o NF Service Name(Default : all NF services available)
-#    service_name:
+#  o Indirect Communication with Delegated Discovery
+#  sbi:
+#    client:
+#      nrf:
+#        - uri: http://127.0.0.10:7777
+#      scp:
+#        - uri: http://127.0.0.200:7777
+#      delegated:
+#        nrf:
+#          nfm: no    # Directly communicate NRF management functions
+#          disc: yes  # Delegate discovery to SCP
+#        scp:
+#          next: yes  # Delegate to SCP for next-hop communications
 #
-#  o NF Service Name(Only some NF services are available)
-#    service_name:
-#      - nnssf-nsselection
+#  o Default delegation: all communications are delegated to the SCP
+#  sbi:
+#    client:
+#      nrf:
+#        - uri: http://127.0.0.10:7777
+#      scp:
+#        - uri: http://127.0.0.200:7777
+#      # No 'delegated' section; defaults to AUTO delegation
 #
-#  <NF Discovery Query Parameter>
 #
-#  o (Default) If you do not set Query Parameter as shown below,
+################################################################################
+# HTTPS scheme with TLS
+################################################################################
+#  o Set as default if not individually set
+#  default:
+#    tls:
+#      server:
+#        scheme: https
+#        private_key: /home/jgiovatto/Devel/open5gs/install/etc/open5gs/tls/nssf.key
+#        cert: /home/jgiovatto/Devel/open5gs/install/etc/open5gs/tls/nssf.crt
+#      client:
+#        scheme: https
+#        cacert: /home/jgiovatto/Devel/open5gs/install/etc/open5gs/tls/ca.crt
+#  sbi:
+#    server:
+#      - address: nssf.localdomain
+#    client:
+#      nrf:
+#        - uri: https://nrf.localdomain
+#      nsi:
+#        - uri: https://nrf.localdomain
+#          s_nssai:
+#            sst: 1
 #
-#    sbi:
-#      - addr: 127.0.0.14
-#        port: 7777
+#  o Enable SSL key logging for Wireshark
+#    - This configuration allows capturing SSL/TLS session keys
+#      for debugging or analysis purposes using Wireshark.
+#  default:
+#    tls:
+#      server:
+#        scheme: https
+#        private_key: /home/jgiovatto/Devel/open5gs/install/etc/open5gs/tls/nssf.key
+#        cert: /home/jgiovatto/Devel/open5gs/install/etc/open5gs/tls/nssf.crt
+#        sslkeylogfile: /home/jgiovatto/Devel/open5gs/install/var/log/open5gs/tls/nssf-server-sslkeylog.log
+#      client:
+#        scheme: https
+#        cacert: /home/jgiovatto/Devel/open5gs/install/etc/open5gs/tls/ca.crt
+#        client_sslkeylogfile: /home/jgiovatto/Devel/open5gs/install/var/log/open5gs/tls/nssf-client-sslkeylog.log
+#  sbi:
+#    server:
+#      - address: nssf.localdomain
+#    client:
+#      nrf:
+#        - uri: https://nrf.localdomain
+#      nsi:
+#        - uri: https://nrf.localdomain
+#          s_nssai:
+#            sst: 1
 #
-#    - 'service-names' is included.
-#
-#    sbi:
-#      - addr: 127.0.0.14
-#        port: 7777
-#    discovery:
-#      option:
-#        no_service_names: false
-#
-#  o To remove 'service-names' from URI query parameters in NS Discovery
-#         no_service_names: true
-#
-#    * For Indirect Communication with Delegated Discovery,
-#      'service-names' is always included in the URI query parameter.
-#    * That is, 'no_service_names' has no effect.
-#
-nssf:
-    sbi:
-      - addr: 127.0.0.14
-        port: 7777
-    nsi:
-      - addr: ::1
-        port: 7777
-        s_nssai:
-          sst: 1
-
-#
-# nrf:
-#
-#  <SBI Client>>
-#
-#  o SBI Client(http://127.0.0.10:7777)
-#    sbi:
-#      addr: 127.0.0.10
-#      port: 7777
-#
-#  o SBI Client(https://127.0.0.10:443, http://nrf.open5gs.org:80)
-#    sbi:
-#      - addr: 127.0.0.10
-#        tls:
-#          key: nrf.key
-#          pem: nrf.pem
-#      - name: nrf.open5gs.org
-#
-#  o SBI Client(http://[fd69:f21d:873c:fa::1]:80)
-#    If prefer_ipv4 is true, http://127.0.0.10:80 is selected.
-#
-#    sbi:
-#      addr:
-#        - 127.0.0.10
-#        - fd69:f21d:873c:fa::1
-#
-nrf:
-    sbi:
-      - addr:
-          - 127.0.0.10
-          - ::1
-        port: 7777
-
-#
-# parameter:
-#
-#  o Disable use of IPv4 addresses (only IPv6)
-#      no_ipv4: true
-#
-#  o Disable use of IPv6 addresses (only IPv4)
-#      no_ipv6: true
-#
-#  o Prefer IPv4 instead of IPv6 for estabishing new GTP connections.
-#      prefer_ipv4: true
-#
-parameter:
-
-#
-# max:
-#
-# o Maximum Number of UE
-#    ue: 1024
-# o Maximum Number of Peer(S1AP/NGAP, DIAMETER, GTP, PFCP or SBI)
-#    peer: 64
-#
-max:
-
-#
-# time:
-#
-#  o NF Instance Heartbeat (Default : 0)
-#    NFs will not send heart-beat timer in NFProfile
-#    NRF will send heart-beat timer in NFProfile
-#
-#  o NF Instance Heartbeat (20 seconds)
-#    NFs will send heart-beat timer (20 seconds) in NFProfile
-#    NRF can change heart-beat timer in NFProfile
-#
-#    nf_instance:
-#      heartbeat: 20
-#
-#  o NF Instance Heartbeat (Disabled)
-#    nf_instance:
-#      heartbeat: 0
-#
-#  o NF Instance Heartbeat (10 seconds)
-#    nf_instance:
-#      heartbeat: 10
-#
-#  o Message Wait Duration (Default : 10,000 ms = 10 seconds)
-#
-#  o Message Wait Duration (3000 ms)
-#    message:
-#        duration: 3000
-time:
+#  o Add client TLS verification
+#  default:
+#    tls:
+#      server:
+#        scheme: https
+#        private_key: /home/jgiovatto/Devel/open5gs/install/etc/open5gs/tls/nssf.key
+#        cert: /home/jgiovatto/Devel/open5gs/install/etc/open5gs/tls/nssf.crt
+#        verify_client: true
+#        verify_client_cacert: /home/jgiovatto/Devel/open5gs/install/etc/open5gs/tls/ca.crt
+#      client:
+#        scheme: https
+#        cacert: /home/jgiovatto/Devel/open5gs/install/etc/open5gs/tls/ca.crt
+#        client_private_key: /home/jgiovatto/Devel/open5gs/install/etc/open5gs/tls/nssf.key
+#        client_cert: /home/jgiovatto/Devel/open5gs/install/etc/open5gs/tls/nssf.crt
+#  sbi:
+#    server:
+#      - address: nssf.localdomain
+#    client:
+#      nrf:
+#        - uri: https://nrf.localdomain
+#      nsi:
+#        - uri: https://nrf.localdomain
+#          s_nssai:
+#            sst: 1

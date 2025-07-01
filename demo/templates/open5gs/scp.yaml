@@ -1,6 +1,6 @@
 logger:
     file:
-      path: ${__top_dir}/persist/${__node_name}/var/log/bsf.log
+      path: ${__top_dir}/persist/${__node_name}/var/log/scp.log
     level: ${open5gs_log_level}
 
 global:
@@ -8,45 +8,86 @@ global:
     ue: 1024  # The number of UE can be increased depending on memory size.
 #    peer: 64
 
-bsf:
+scp:
   sbi:
     server:
-      - address: 127.0.0.15
+      - address: 127.0.0.200
         port: 7777
     client:
-#      nrf:
-#        - uri: http://127.0.0.10:7777
-      scp:
-        - uri: http://127.0.0.200:7777
+      nrf:
+        - uri: http://127.0.0.10:7777
 
+################################################################################
+# SCP Info
+################################################################################
+#  o SCP port number(s) WITHOUT SCP Domain
+#   - If no SCP port information is present in ScpInfo or
+#     in ScpDomainInfo for a specific SCP domain,
+#     the HTTP client shall use the default HTTP port number,
+#     i.e. TCP port 80 for "http" URIs or TCP port 443
+#     for "https" URIs as specified in IETF RFC 7540 [9]
+#     when sending a request to the SCP within the specific SCP domain.
+#  info:
+#    port:
+#      http: 7777
+#      https: 8888
+#
+#  o SCP port number(s) WITH SCP Domain
+#   - If this attribute is present,
+#     it has precedence over the scpPorts attribute of ScpInfo.
+#  info:
+#    domain:
+#      - name: SCP_Domain_1
+#        fqdn: scp.localdomain
+#        port:
+#          http: 7777
+#          https: 8888
+#
+#  o Complex Example
+#  info:
+#    port:
+#      http: 7777
+#      https: 8888
+#    domain:
+#      - name: SCP_Domain_1
+#        fqdn: scp.hplmndomain
+#        port:
+#          http: 3333
+#          https: 4444
+#      - name: SCP_Domain_2
+#        fqdn: scp.vplmndomain
+#        port:
+#          http: 5555
+#          https: 6666
+#
 ################################################################################
 # SBI Server
 ################################################################################
-#  o Bind to the address on the eth0 and advertise as open5gs-bsf.svc.local
+#  o Bind to the address on the eth0 and advertise as open5gs-scp.svc.local
 #  sbi:
 #    server:
 #      - dev:eth0
-#        advertise: open5gs-bsf.svc.local
+#        advertise: open5gs-scp.svc.local
 #
 #  o Specify a custom port number 7777 while binding to the given address
 #  sbi:
 #    server:
-#      - address: bsf.localdomain
+#      - address: scp.localdomain
 #        port: 7777
 #
-#  o Bind to 127.0.0.15 and advertise as open5gs-bsf.svc.local
+#  o Bind to 127.0.0.200 and advertise as open5gs-scp.svc.local
 #  sbi:
 #    server:
-#      - address: 127.0.0.15
+#      - address: 127.0.0.200
 #        port: 7777
-#        advertise: open5gs-bsf.svc.local
+#        advertise: open5gs-scp.svc.local
 #
 #  o Bind to port 7777 but advertise with a different port number 8888
 #  sbi:
 #    server:
-#      - address: 127.0.0.15
+#      - address: 127.0.0.200
 #        port: 7777
-#        advertise: open5gs-bsf.svc.local:8888
+#        advertise: open5gs-scp.svc.local:8888
 #
 ################################################################################
 # SBI Client
@@ -57,7 +98,7 @@ bsf:
 #      nrf:
 #        - uri: http://127.0.0.10:7777
 #
-#  o Indirect Communication by Delegating to SCP
+#  o Indirect Communication by Delegating to Next-SCP
 #  sbi:
 #    client:
 #      scp:
@@ -71,13 +112,10 @@ bsf:
 #      scp:
 #        - uri: http://127.0.0.200:7777
 #      delegated:
-#        nrf:
-#          nfm: no    # Directly communicate NRF management functions
-#          disc: no   # Directly communicate NRF discovery
 #        scp:
 #          next: no   # Do not delegate to SCP for next-hop
 #
-#  o Indirect Communication with Delegated Discovery
+#  o Indirect Communication with Delegation
 #  sbi:
 #    client:
 #      nrf:
@@ -85,13 +123,10 @@ bsf:
 #      scp:
 #        - uri: http://127.0.0.200:7777
 #      delegated:
-#        nrf:
-#          nfm: no    # Directly communicate NRF management functions
-#          disc: yes  # Delegate discovery to SCP
 #        scp:
 #          next: yes  # Delegate to SCP for next-hop communications
 #
-#  o Default delegation: all communications are delegated to the SCP
+#  o Default delegation: all communications are delegated to the Next-SCP
 #  sbi:
 #    client:
 #      nrf:
@@ -108,14 +143,14 @@ bsf:
 #    tls:
 #      server:
 #        scheme: https
-#        private_key: /home/jgiovatto/Devel/open5gs/install/etc/open5gs/tls/bsf.key
-#        cert: /home/jgiovatto/Devel/open5gs/install/etc/open5gs/tls/bsf.crt
+#        private_key: /home/jgiovatto/Devel/open5gs/install/etc/open5gs/tls/scp.key
+#        cert: /home/jgiovatto/Devel/open5gs/install/etc/open5gs/tls/scp.crt
 #      client:
 #        scheme: https
 #        cacert: /home/jgiovatto/Devel/open5gs/install/etc/open5gs/tls/ca.crt
 #  sbi:
 #    server:
-#      - address: bsf.localdomain
+#      - address: scp.localdomain
 #    client:
 #      nrf:
 #        - uri: https://nrf.localdomain
@@ -127,16 +162,16 @@ bsf:
 #    tls:
 #      server:
 #        scheme: https
-#        private_key: /home/jgiovatto/Devel/open5gs/install/etc/open5gs/tls/bsf.key
-#        cert: /home/jgiovatto/Devel/open5gs/install/etc/open5gs/tls/bsf.crt
-#        sslkeylogfile: /home/jgiovatto/Devel/open5gs/install/var/log/open5gs/tls/bsf-server-sslkeylog.log
+#        private_key: /home/jgiovatto/Devel/open5gs/install/etc/open5gs/tls/scp.key
+#        cert: /home/jgiovatto/Devel/open5gs/install/etc/open5gs/tls/scp.crt
+#        sslkeylogfile: /home/jgiovatto/Devel/open5gs/install/var/log/open5gs/tls/scp-server-sslkeylog.log
 #      client:
 #        scheme: https
 #        cacert: /home/jgiovatto/Devel/open5gs/install/etc/open5gs/tls/ca.crt
-#        client_sslkeylogfile: /home/jgiovatto/Devel/open5gs/install/var/log/open5gs/tls/bsf-client-sslkeylog.log
+#        client_sslkeylogfile: /home/jgiovatto/Devel/open5gs/install/var/log/open5gs/tls/scp-client-sslkeylog.log
 #  sbi:
 #    server:
-#      - address: bsf.localdomain
+#      - address: scp.localdomain
 #    client:
 #      nrf:
 #        - uri: https://nrf.localdomain
@@ -146,18 +181,18 @@ bsf:
 #    tls:
 #      server:
 #        scheme: https
-#        private_key: /home/jgiovatto/Devel/open5gs/install/etc/open5gs/tls/bsf.key
-#        cert: /home/jgiovatto/Devel/open5gs/install/etc/open5gs/tls/bsf.crt
+#        private_key: /home/jgiovatto/Devel/open5gs/install/etc/open5gs/tls/scp.key
+#        cert: /home/jgiovatto/Devel/open5gs/install/etc/open5gs/tls/scp.crt
 #        verify_client: true
 #        verify_client_cacert: /home/jgiovatto/Devel/open5gs/install/etc/open5gs/tls/ca.crt
 #      client:
 #        scheme: https
 #        cacert: /home/jgiovatto/Devel/open5gs/install/etc/open5gs/tls/ca.crt
-#        client_private_key: /home/jgiovatto/Devel/open5gs/install/etc/open5gs/tls/bsf.key
-#        client_cert: /home/jgiovatto/Devel/open5gs/install/etc/open5gs/tls/bsf.crt
+#        client_private_key: /home/jgiovatto/Devel/open5gs/install/etc/open5gs/tls/scp.key
+#        client_cert: /home/jgiovatto/Devel/open5gs/install/etc/open5gs/tls/scp.crt
 #  sbi:
 #    server:
-#      - address: bsf.localdomain
+#      - address: scp.localdomain
 #    client:
 #      nrf:
 #        - uri: https://nrf.localdomain
