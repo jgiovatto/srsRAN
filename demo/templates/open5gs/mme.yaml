@@ -12,8 +12,7 @@ mme:
   freeDiameter: /home/jgiovatto/Devel/open5gs/install/etc/freeDiameter/mme.conf
   s1ap:
     server:
-#     - address: 127.0.0.2
-      - address: ${mme_ip_addr}
+      - address: ${control_ip_addr}  # was 127.0.0.2
   gtpc:
     server:
       - address: 127.0.0.2
