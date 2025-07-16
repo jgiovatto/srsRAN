@@ -17,7 +17,7 @@ sgwu:
 #        - address: 127.0.0.3
   gtpu:
     server:
-      - address: 127.0.0.6
+      - address: ${control_ip_addr}   # was 127.0.0.6
 
 ################################################################################
 # PFCP Server
