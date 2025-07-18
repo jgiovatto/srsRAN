@@ -15,7 +15,7 @@ mme:
       - address: ${control_ip_addr}  # was 127.0.0.2
   gtpc:
     server:
-      - address: ${control_ip_addr}  # was 127.0.0.2
+      - address: 127.0.0.2
     client:
       sgwc:
         - address: 127.0.0.3

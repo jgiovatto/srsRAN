@@ -19,8 +19,9 @@ upf:
     server:
       - address: 127.0.0.7
   session:
-    - subnet: 10.99.1.0/24
-      gateway: 10.99.1.201
+    - subnet: 172.16.0.0/24
+      gateway: 172.16.0.201
+
   metrics:
     server:
       - address: 127.0.0.7
