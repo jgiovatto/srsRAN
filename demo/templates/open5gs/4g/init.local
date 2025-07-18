@@ -31,16 +31,17 @@ mongod --config $working_dir/mongodb.conf --fork
 
 sleep 1
 
-# MME        (Mobility Management Entity): This handles connection and mobility management for the devices in the network.
-# HSS        (Home Subscriber Server): Stores subscriber profiles and generates SIM authentication vectors.
-# PCRF       (Policy and Charging Rules Function): Enforces subscriber policies and handles real-time charging control.
-# SGW-C      (Serving Gateway Control Plane): Handles the control plane aspects of user traffic routing.
-# SGW-U      (Serving Gateway User Plane): Manages the user data plane, forwarding user data packets between the eNB and PGW.
-# PGW-C/SMF  (Packet Gateway Control Plane / Session Management Function): Connects the network to external IP networks, managing IP addresses and enforcing policies.
-# PGW-U/UPF  (Packet Gateway User Plane / User Plane Function): The user plane component of the Packet Gateway, facilitating the actual data transfer to and from external networks. 
-# NRF        (Network Repository Function) 
-# HSS        (Home Subscriber Server). Stores subscriber information and facilitates network operations in both 4G (LTE) and 5G networks
-# SCP        (Service Communication Proxy). Key component within the 5G Service-Based Architecture (SBA) that enables indirect communication between different network function
+
+# NRF  - NF Repository Function
+# MME  - Mobility Management Entity
+# HSS  - Home Subscriber Server
+# HSS  - Home Subscriber Server).
+# SCP  - Service Communication Proxy
+# PCRF - Policy and Charging Rules Function
+# SGWC - Serving Gateway Control Plane
+# SGWU - Serving Gateway User Plane
+# PGWC/SMF - Packet Gateway Control Plane / (component contained in Open5GS SMF)
+# PGWU/UPF - Packet Gateway User Plane    / (component contained in Open5GS UPF)
 #
 # start open5gs and run in the background
 # see open5gs/install/etc/

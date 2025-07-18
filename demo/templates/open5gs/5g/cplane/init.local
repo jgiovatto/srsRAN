@@ -1,0 +1,79 @@
+#!/bin/bash -
+
+top_dir=$1
+node_name=$2
+start_time=$3
+
+echo "top_dir: $top_dir"
+echo "node_name: $node_name"
+echo "start_time: $start_time"
+
+sudo setcap 'cap_net_admin,cap_net_raw+ep' $(which ping)
+
+working_dir="$top_dir/$node_name"
+
+cd $working_dir
+
+# create mongodb dir
+mkdir -p ${__top_dir}/persist/${__node_name}/var/run/mongodb
+
+# start mongodb and run in the background
+mongod --config $working_dir/mongodb.conf --fork
+
+sleep 1
+
+
+#  NRF  - NF Repository Function
+#  SCP  - Service Communication Proxy
+#  AMF  - Access and Mobility Management Function
+#  SMF  - Session Management Function
+#  AUSF - Authentication Server Function
+#  UDM  - Unified Data Management
+#  UDR  - Unified Data Repository
+#  NSSF - Network Slice Selection Function
+#  PCF  - Policy and Charging Function
+#  BSF  - Binding Support Function
+#  SGWC - Serving Gateway Control Plane
+#  SEPP - Security Edge Protection Proxy
+#  PCRF - Policy and Charging Rules Function
+
+
+# start open5gs and run in the background
+# see open5gs/install/etc/
+open5gs-nrfd  -c $working_dir/nrf.yaml   -D
+sleep 1
+open5gs-scpd  -c $working_dir/scp.yaml   -D
+open5gs-amfd  -c $working_dir/amf.yaml   -D
+open5gs-smfd  -c $working_dir/smf.yaml   -D
+open5gs-ausfd -c $working_dir/ausf.yaml  -D
+open5gs-udmd  -c $working_dir/udm.yaml   -D
+open5gs-udrd  -c $working_dir/udr.yaml   -D
+open5gs-nssfd -c $working_dir/nssf.yaml  -D
+open5gs-bsfd  -c $working_dir/bsf.yaml   -D
+open5gs-sgwcd -c $working_dir/sgwc.yaml  -D
+open5gs-pcrfd -c $working_dir/pcrf.yaml  -D
+open5gs-seppd -c $working_dir/sepp1.yaml -D
+open5gs-seppd -c $working_dir/sepp2.yaml -D
+
+#open5gs-pcfd  -c $working_dir/pcf.yaml   -D
+#open5gs-hssd  -c $working_dir/hss.yaml   -D
+#open5gs-mmed  -c $working_dir/mme.yaml   -D
+
+sleep 1
+
+# populate mongodb
+
+KEY=${usim_k}
+OPC=${usim_op}
+
+IMSI=${usim_imsi_prefix}
+ADDR=${lan_addr_prefix}
+
+# imsi length must be 15 digits
+for N in `seq 1 10`; do
+  STR=$(printf "%s%03d %s%d %s %s" $IMSI $N $ADDR $N $KEY $OPC)
+  echo $STR
+  open5gs-dbctl add $STR
+done
+
+echo "Done open5gs-c startup !!!"

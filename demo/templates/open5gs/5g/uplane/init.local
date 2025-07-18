@@ -1,0 +1,34 @@
+#!/bin/bash -
+
+top_dir=$1
+node_name=$2
+start_time=$3
+
+echo "top_dir: $top_dir"
+echo "node_name: $node_name"
+echo "start_time: $start_time"
+
+sudo setcap 'cap_net_admin,cap_net_raw+ep' $(which ping)
+
+working_dir="$top_dir/$node_name"
+
+cd $working_dir
+
+# create tun interface -n implies tun device
+# typically created by systemd/network/99-open5gs.net*
+
+tunctl -n -t ${tun_device_name}
+
+ifconfig ${tun_device_name} up
+
+ifconfig ${tun_device_name} ${tun_device_addr}
+
+#  SGWU - Serving Gateway User Plane
+#  UPF  - User Plane Function
+
+# start open5gs and run in the background
+# see open5gs/install/etc/
+open5gs-upfd  -c $working_dir/upf.yaml   -D
+open5gs-sgwud -c $working_dir/sgwu.yaml  -D
+
+echo "Done open5gs-u startup !!!"
