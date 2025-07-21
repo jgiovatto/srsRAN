@@ -36,7 +36,9 @@ sleep 1
 #  SGWC - Serving Gateway Control Plane
 #  SEPP - Security Edge Protection Proxy
 #  PCRF - Policy and Charging Rules Function
-
+#  HSS  - Home Subscriber Server
+#  PCF  - Policy Control Function
+#  MME  - Mobility Management Entity
 
 # start open5gs and run in the background
 # see open5gs/install/etc/
@@ -54,10 +56,9 @@ open5gs-sgwcd -c $working_dir/sgwc.yaml  -D
 open5gs-pcrfd -c $working_dir/pcrf.yaml  -D
 open5gs-seppd -c $working_dir/sepp1.yaml -D
 open5gs-seppd -c $working_dir/sepp2.yaml -D
-
-#open5gs-pcfd  -c $working_dir/pcf.yaml   -D
-#open5gs-hssd  -c $working_dir/hss.yaml   -D
-#open5gs-mmed  -c $working_dir/mme.yaml   -D
+open5gs-pcfd  -c $working_dir/pcf.yaml   -D
+open5gs-hssd  -c $working_dir/hss.yaml   -D
+open5gs-mmed  -c $working_dir/mme.yaml   -D
 
 sleep 1
 
