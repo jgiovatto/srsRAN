@@ -46,7 +46,9 @@ cell_cfg:
 
 log:
   filename:  ${__top_dir}/persist/${__node_name}/var/log/gnb.log  # Path of the log file.
-  all_level: info                   # Logging level applied to all layers.
+  all_level: ${gnb_log_level}       # Logging level applied to all layers.
+  fapi_level:  debug
+  radio_level: debug
   hex_max_size: 0
 
 pcap:

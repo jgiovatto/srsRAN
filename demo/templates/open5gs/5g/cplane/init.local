@@ -58,7 +58,6 @@ open5gs-seppd -c $working_dir/sepp1.yaml -D
 open5gs-seppd -c $working_dir/sepp2.yaml -D
 open5gs-pcfd  -c $working_dir/pcf.yaml   -D
 open5gs-hssd  -c $working_dir/hss.yaml   -D
-open5gs-mmed  -c $working_dir/mme.yaml   -D
 
 sleep 1
 
