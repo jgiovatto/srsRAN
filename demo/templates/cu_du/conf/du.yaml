@@ -1,0 +1,59 @@
+
+f1ap:
+  cu_cp_addr: 127.0.10.1                    # The address of CU-CP
+  bind_addr:  127.0.1.2             
+
+f1u:
+  socket:
+    - bind_addr: 127.0.1.2
+
+
+ru_sdr:
+  device_driver: zmq                # The RF driver name.
+  device_args: ${dev_args}
+  srate: 23.04                      # RF sample rate might need to be adjusted according to selected bandwidth.
+  tx_gain: 75                       # Transmit gain of the RF might need to adjusted to the given situation.
+  rx_gain: 75                       # Receive gain of the RF might need to adjusted to the given situation.
+
+cell_cfg:
+  dl_arfcn: 368500                  # ARFCN of the downlink carrier (center frequency).
+  band: 3                           # The NR band.
+  channel_bandwidth_MHz: 20         # Bandwith in MHz. Number of PRBs will be automatically derived.
+  common_scs: 15                    # Subcarrier spacing in kHz used for data.
+  plmn: "99970"                     # PLMN broadcasted by the gNB.
+  tac: 1                            # Tracking area code (needs to match the core configuration).
+  pdcch:
+    common:
+      ss0_index: 0                  # Set search space zero index to match srsUE capabilities
+      coreset0_index: 12            # Set search CORESET Zero index to match srsUE capabilities
+    dedicated:
+      ss2_type: common              # Search Space type, has to be set to common
+      dci_format_0_1_and_1_1: false # Set correct DCI format (fallback)
+  prach:
+    prach_config_index: 1           # Sets PRACH config to match what is expected by srsUE
+  pdsch:
+    mcs_table: qam64                # Sets PDSCH MCS to 64 QAM
+  pusch:
+    mcs_table: qam64                # Sets PUSCH MCS to 64 QAM
+
+log:
+  filename:     ${__top_dir}/persist/${__node_name}/var/log/du.log  # Path of the log file.
+  lib_level:    ${du_log_level}
+  e2ap_level:   ${du_log_level}
+  config_level: ${du_log_level}
+  mac_level:    ${du_log_level}
+  rlc_level:    ${du_log_level}
+  f1ap_level:   ${du_log_level}
+  f1u_level:    ${du_log_level}
+  gtpu_level:   ${du_log_level}
+  du_level:     ${du_log_level}
+  fapi_level:   ${du_log_level}
+  phy_level:    ${du_log_level}
+  hal_level:    ${du_log_level}
+  radio_level:  ${du_log_level}
+  phy_rx_symbols_port: 0
+  phy_rx_symbols_prach: false
+  broadcast_enabled: false
+  high_latency_diagnostics_enabled: false
+  f1ap_json_enabled: false
+  hex_max_size: 0

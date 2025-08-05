@@ -1,0 +1,38 @@
+cu_cp:
+  amf:
+    addr: ${amf_ip_addr}                  # The address or hostname of the AMF.
+    port: 38412
+    bind_addr: ${control_ip_addr}         # A local IP that the gNB binds to for traffic from the AMF.
+    supported_tracking_areas:             # Configure the TA associated with the CU-CP
+      - tac: 1
+        plmn_list:
+          - plmn: "99970"
+            tai_slice_support_list:
+              - sst: 1
+  f1ap:
+    bind_addr: 127.0.10.1                 # Configure the F1AP bind address, this will enable the CU-cp to connect to the DU
+
+cu_up:
+  f1u:
+    socket:                               # Define UDP/IP socket(s) for F1-U interface.
+      - bind_addr: 127.0.10.1             # Sets the address that the F1-U socket will bind to.
+
+log:
+  filename:     ${__top_dir}/persist/${__node_name}/var/log/cu.log  # Path of the log file.
+  all_level:    ${cu_log_level}              # Logging level applied to all layers.
+  lib_level:    ${cu_log_level}
+  e2ap_level:   ${cu_log_level}
+  config_level: ${cu_log_level}
+  rrc_level:    ${cu_log_level}
+  ngap_level:   ${cu_log_level}
+  f1ap_level:   ${cu_log_level}
+  sec_level:    ${cu_log_level}
+  pdcp_level:   ${cu_log_level}
+  sdap_level:   ${cu_log_level}
+  gtpu_level:   ${cu_log_level}
+  e1ap_level:   ${cu_log_level}
+  f1u_level:    ${cu_log_level}
+  cu_level:     ${cu_log_level}
+  e1ap_json_enabled: true
+  f1ap_json_enabled: true
+  hex_max_size: 0

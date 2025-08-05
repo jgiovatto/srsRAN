@@ -1,0 +1,22 @@
+#!/bin/bash -
+
+top_dir=$1
+node_name=$2
+start_time=$3
+
+echo "top_dir: $top_dir"
+echo "node_name: $node_name"
+echo "start_time: $start_time"
+
+sudo setcap 'cap_net_admin,cap_net_raw+ep' $(which ping)
+
+cd "$top_dir/$node_name"
+
+# delay cu startup so that amf is ready
+sleep 10
+
+nohup srscu -c cu.yaml &
+
+sleep 10
+
+nohup srsdu -c du.yaml &
