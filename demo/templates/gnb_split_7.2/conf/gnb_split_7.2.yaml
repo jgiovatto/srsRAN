@@ -16,12 +16,41 @@ cu_cp:
               - sst: 1
   inactivity_timer: 7200            # Sets the UE/PDU Session/DRB inactivity timer to 7200 seconds. Supported: [1 - 7200].
 
-ru_sdr:
-  device_driver: zmq                # The RF driver name.
-  device_args: ${dev_args}
-  srate: 23.04                      # RF sample rate might need to be adjusted according to selected bandwidth.
-  tx_gain: 75                       # Transmit gain of the RF might need to adjusted to the given situation.
-  rx_gain: 75                       # Receive gain of the RF might need to adjusted to the given situation.
+ru_ofh:
+  gps_alpha: 0
+  gps_beta: 0
+  cells:
+    - t1a_max_cp_dl: 500
+      t1a_min_cp_dl: 258
+      t1a_max_cp_ul: 500
+      t1a_min_cp_ul: 285
+      t1a_max_up: 300
+      t1a_min_up: 85
+      ta4_max: 500
+      ta4_min: 85
+      is_prach_cp_enabled: true
+      ignore_prach_start_symbol: false
+      ignore_ecpri_seq_id: false
+      ignore_ecpri_payload_size: false
+      warn_unreceived_ru_frames: after_traffic_detection
+      compr_method_ul: bfp
+      compr_bitwidth_ul: 9
+      compr_method_dl: bfp
+      compr_bitwidth_dl: 9
+      compr_method_prach: bfp
+      compr_bitwidth_prach: 9
+      enable_ul_static_compr_hdr: true
+      enable_dl_static_compr_hdr: true
+      iq_scaling: 0.349999994
+      network_interface: lo
+      enable_promiscuous: false
+      mtu: 9000
+      ru_mac_addr: 00:11:22:33:44:01
+      du_mac_addr: 00:11:22:33:44:01
+      check_link_status: false
+      prach_port_id: [4]
+      dl_port_id: [0]
+      ul_port_id: [0]
 
 cell_cfg:
   dl_arfcn: 368500                  # ARFCN of the downlink carrier (center frequency).
@@ -66,8 +95,7 @@ log:
   config_level: ${gnb_log_level}
   phy_level:    ${gnb_log_level}
   hal_level:    ${gnb_log_level}
-  radio_level:  ${gnb_log_level}
-  ofh_level  :  ${gnb_log_level}
+  ofh_level:    ${gnb_log_level}
   broadcast_enabled: 1
   hex_max_size: 0
 

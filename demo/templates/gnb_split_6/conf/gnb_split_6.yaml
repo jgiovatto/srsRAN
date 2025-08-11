@@ -16,13 +16,6 @@ cu_cp:
               - sst: 1
   inactivity_timer: 7200            # Sets the UE/PDU Session/DRB inactivity timer to 7200 seconds. Supported: [1 - 7200].
 
-ru_sdr:
-  device_driver: zmq                # The RF driver name.
-  device_args: ${dev_args}
-  srate: 23.04                      # RF sample rate might need to be adjusted according to selected bandwidth.
-  tx_gain: 75                       # Transmit gain of the RF might need to adjusted to the given situation.
-  rx_gain: 75                       # Receive gain of the RF might need to adjusted to the given situation.
-
 cell_cfg:
   dl_arfcn: 368500                  # ARFCN of the downlink carrier (center frequency).
   band: 3                           # The NR band.
@@ -64,10 +57,6 @@ log:
   rlc_level:    ${gnb_log_level}
   sdap_level:   ${gnb_log_level}
   config_level: ${gnb_log_level}
-  phy_level:    ${gnb_log_level}
-  hal_level:    ${gnb_log_level}
-  radio_level:  ${gnb_log_level}
-  ofh_level  :  ${gnb_log_level}
   broadcast_enabled: 1
   hex_max_size: 0
 

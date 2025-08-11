@@ -55,11 +55,11 @@ open5gs-bsfd  -c $working_dir/bsf.yaml   -D
 open5gs-sgwcd -c $working_dir/sgwc.yaml  -D
 open5gs-pcrfd -c $working_dir/pcrf.yaml  -D
 open5gs-seppd -c $working_dir/sepp1.yaml -D
+sleep 1
 open5gs-seppd -c $working_dir/sepp2.yaml -D
 open5gs-pcfd  -c $working_dir/pcf.yaml   -D
 open5gs-hssd  -c $working_dir/hss.yaml   -D
 
-sleep 1
 
 # populate mongodb
 

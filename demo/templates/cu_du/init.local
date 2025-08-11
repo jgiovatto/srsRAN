@@ -15,8 +15,8 @@ cd "$top_dir/$node_name"
 # delay cu startup so that amf is ready
 sleep 10
 
-nohup srscu -c cu.yaml &
+nohup $SRSRAN_5G_BIN_DIR/apps/cu/srscu -c cu.yaml &
 
 sleep 10
 
-nohup srsdu -c du.yaml &
+nohup $SRSRAN_5G_BIN_DIR/apps/du/srsdu -c du.yaml &
