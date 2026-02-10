@@ -182,7 +182,42 @@ sudo systemctl start mongod.service
 
 sudo systemctl status mongod.service
 
+############################
+installing open5gs
 
+https://github.com/open5gs/open5gs
+
+sudo dnf install tunctl
+sudo dnf install mongo-c-driver-devel
+sudo dnf install libyaml-devel
+sudo dnf install l:ibmicrohttpd-devel
+sudo dnf install libgcrypt-devel
+sudo dnf install libidn-devel
+sudo dnf install libnghttp2-devel
+sudo dnf install libcurl-devel
+sudo dnf install meson ninja-build
+sudo dnf install libtalloc-devel
+
+meson setup build --prefix=`pwd`/install
+ninja -C build
+cd build
+ninja install
+
+# grab open5gs-dbctl here:
+wget https://raw.githubusercontent.com/open5gs/open5gs/main/misc/db/open5gs-dbctl
+
+
+Configuring test-config-private.h using configuration
+Message:
+        prefix:                       /home/jgiovatto/Devel/open5gs/install
+        libdir:                       /home/jgiovatto/Devel/open5gs/install/lib64
+        bindir:                       /home/jgiovatto/Devel/open5gs/install/bin
+        sysconfdir:                   /home/jgiovatto/Devel/open5gs/install/etc
+        localstatedir:                /home/jgiovatto/Devel/open5gs/install/var
+        build location:               /home/jgiovatto/Devel/open5gs/build
+        source location:              /home/jgiovatto/Devel/open5gs
+        compiler:                     gcc
+        debugging support:            debug
 
 #############################
 Notes on mongodb shell upgrade to openssl 3:
