@@ -169,6 +169,12 @@ gpgkey=https://www.mongodb.org/static/pgp/server-7.0.asc
 
 sudo dnf install mongodb-org mongodb-org-server
 
+Notes on mongodb shell upgrade to openssl 3:
+
+sudo yum remove mongodb-mongosh
+sudo yum install mongodb-mongosh-shared-openssl3
+
+
 if you are facing permission error in /etc/group, the most probable reason is that SELinux (Security-Enhanced Linux) is enabled, so it might be preventing access.
 
 You can temporarily disable SELinux to allow access to /etc/group using the below command, after disabling run the install commands again.
@@ -179,8 +185,20 @@ sudo setenforce 0
 
 sudo systemctl enable mongod.service 
 sudo systemctl start mongod.service
-
 sudo systemctl status mongod.service
+
+mongod.service - MongoDB Database Server
+     Loaded: loaded (/usr/lib/systemd/system/mongod.service; enabled; preset: disabled)
+    Drop-In: /usr/lib/systemd/system/service.d
+             └─10-timeout-abort.conf
+     Active: active (running) since Tue 2026-02-10 13:07:31 EST; 5s ago
+ Invocation: 1cd5432109b74466b582f14e11bed2c5
+       Docs: https://docs.mongodb.org/manual
+   Main PID: 144718 (mongod)
+     Memory: 74M (peak: 74M)
+        CPU: 170ms
+     CGroup: /system.slice/mongod.service
+
 
 ############################
 installing open5gs
@@ -218,12 +236,6 @@ Message:
         source location:              /home/jgiovatto/Devel/open5gs
         compiler:                     gcc
         debugging support:            debug
-
-#############################
-Notes on mongodb shell upgrade to openssl 3:
-
-sudo yum remove mongodb-mongosh
-sudo yum install mongodb-mongosh-shared-openssl3
 
 
 ############################
