@@ -147,6 +147,11 @@ To clean the experiment configuration and runtime log files just run 'make clean
 
 Note all generated log files are stored in the 'persist' directory.
 
+
+#########################
+Notes on building srsRAN:
+sudo yum install cmake make gcc gcc-c++ fftw-devel lksctp-tools-devel yaml-cpp-devel mbedtls-devel uhd-devel fftw3-devel mbedtls-devel lksctp-tools-devel libconfig-devel boost-devel zeromq-devel
+
 #########################
 Notes on mongodb:
 
@@ -205,16 +210,7 @@ installing open5gs
 
 https://github.com/open5gs/open5gs
 
-sudo dnf install tunctl
-sudo dnf install mongo-c-driver-devel
-sudo dnf install libyaml-devel
-sudo dnf install l:ibmicrohttpd-devel
-sudo dnf install libgcrypt-devel
-sudo dnf install libidn-devel
-sudo dnf install libnghttp2-devel
-sudo dnf install libcurl-devel
-sudo dnf install meson ninja-build
-sudo dnf install libtalloc-devel
+sudo dnf install tunctl mongo-c-driver-devel libyaml-devel libmicrohttpd-devel libgcrypt-devel libidn-devel libnghttp2-devel libcurl-devel install meson ninja-build libtalloc-devel flex bison
 
 meson setup build --prefix=`pwd`/install
 ninja -C build
@@ -227,13 +223,13 @@ wget https://raw.githubusercontent.com/open5gs/open5gs/main/misc/db/open5gs-dbct
 
 Configuring test-config-private.h using configuration
 Message:
-        prefix:                       /home/jgiovatto/Devel/open5gs/install
-        libdir:                       /home/jgiovatto/Devel/open5gs/install/lib64
-        bindir:                       /home/jgiovatto/Devel/open5gs/install/bin
-        sysconfdir:                   /home/jgiovatto/Devel/open5gs/install/etc
-        localstatedir:                /home/jgiovatto/Devel/open5gs/install/var
-        build location:               /home/jgiovatto/Devel/open5gs/build
-        source location:              /home/jgiovatto/Devel/open5gs
+        prefix:                       /home/mydir/open5gs/install
+        libdir:                       /home/mydir/open5gs/install/lib64
+        bindir:                       /home/mydir/open5gs/install/bin
+        sysconfdir:                   /home/mydir/open5gs/install/etc
+        localstatedir:                /home/mydir/open5gs/install/var
+        build location:               /home/mydir/open5gs/build
+        source location:              /home/mydir/open5gs
         compiler:                     gcc
         debugging support:            debug
 
