@@ -226,7 +226,7 @@ public:
       return *this;
     }
     resize(other.size());
-    const auto copy_len = std::min(cap_, other.size()); // XXX_JG
+    const auto copy_len = std::min(cap_, other.size()); // XXX_JG_RANGE_CHECK
     if(copy_len > 0) {
         std::copy(&other[0], &other[copy_len], data_);
      }
@@ -238,30 +238,26 @@ public:
       return;
     }
     if (cap_ >= new_size) {
+      if (new_size > size_) {
+        std::fill(data_ + size_, data_ + new_size, T());
+      }
       size_ = new_size;
       return;
     }
 
-    T* old_data = data_;
-    const auto old_cap = cap_;
-    cap_        = new_size > new_cap ? new_size : new_cap;
-    if (cap_ > 0) {
-      data_ = new T[cap_];
-      if (old_data != NULL) {
-        srsran_assert(cap_ > size_, "Old size larger than new capacity in dyn_array\n");
-        // copy old data if any, min num of old elements vs new capacity XXX_JG
-        const auto copy_len = std::min(std::min(size_, old_cap), cap_);
-        if(copy_len > 0) {
-           std::copy(&old_data[0], &old_data[copy_len], data_);
-        }
+    new_cap     = new_size > new_cap ? new_size : new_cap;
+    T* new_data = nullptr;
+    if (new_cap > 0) {
+      new_data = new T[new_cap];
+      if (data_ != nullptr) {
+        unsigned min_size = std::min(size_, new_size);
+        std::move(data_, data_ + min_size, new_data);
       }
-    } else {
-      data_ = NULL;
     }
+    cap_  = new_cap;
     size_ = new_size;
-    if (old_data != NULL) {
-      delete[] old_data;
-    }
+    delete[] data_;
+    data_ = new_data;
   }
   iterator erase(iterator it)
   {

@@ -73,7 +73,6 @@ option(ENABLE_RF_PLUGINS     "Enable RF plugins"                        ON)
 option(ENABLE_UHD            "Enable UHD"                               ON)
 option(ENABLE_BLADERF        "Enable BladeRF"                           ON)
 option(ENABLE_SOAPYSDR       "Enable SoapySDR"                          ON)
-option(ENABLE_SKIQ           "Enable Sidekiq SDK"                       ON)
 option(ENABLE_ZEROMQ         "Enable ZeroMQ"                            ON)
 option(ENABLE_HARDSIM        "Enable support for SIM cards"             ON)
 
@@ -108,7 +107,7 @@ option(ENABLE_ALL_TEST       "Enable all unit/component test"           OFF)
 # (gcc-ar, gcc-nm, ...).
 option(BUILD_WITH_LTO        "Enable LTO (experimental)"                OFF)
   
-# added option for shmem rf
+# XXX_JG added option for shmem rf
 option(ENABLE_SHMEMRF        "Enable shared memory rf test device"      ON)
 
 if(NOT GCC_ARCH)
@@ -219,15 +218,6 @@ if(ENABLE_UHD)
   endif(UHD_FOUND)
 endif(ENABLE_UHD)
 
-# SKIQ
-if (ENABLE_SKIQ)
-  find_package(SKIQ)
-  if(SKIQ_FOUND)
-    include_directories(${SKIQ_INCLUDE_DIRS})
-    link_directories(${SKIQ_LIBRARY_DIRS})
-  endif(SKIQ_FOUND)
-endif (ENABLE_SKIQ)
-
 # BladeRF
 if(ENABLE_BLADERF)
   find_package(bladeRF)
@@ -260,12 +250,12 @@ if(ENABLE_TIMEPROF)
     add_definitions(-DENABLE_TIMEPROF)
 endif(ENABLE_TIMEPROF)
 
-if(BLADERF_FOUND OR UHD_FOUND OR SOAPYSDR_FOUND OR ZEROMQ_FOUND OR SKIQ_FOUND OR ENABLE_SHMEMRF)
+if(BLADERF_FOUND OR UHD_FOUND OR SOAPYSDR_FOUND OR ZEROMQ_FOUND OR ENABLE_SHMEMRF)
   set(RF_FOUND TRUE CACHE INTERNAL "RF frontend found")
-else(BLADERF_FOUND OR UHD_FOUND OR SOAPYSDR_FOUND OR ZEROMQ_FOUND OR SKIQ_FOUND OR ENABLE_SHMEMRF)
+else(BLADERF_FOUND OR UHD_FOUND OR SOAPYSDR_FOUND OR ZEROMQ_FOUND OR ENABLE_SHMEMRF)
   set(RF_FOUND FALSE CACHE INTERNAL "RF frontend found")
   add_definitions(-DDISABLE_RF)
-endif(BLADERF_FOUND OR UHD_FOUND OR SOAPYSDR_FOUND OR ZEROMQ_FOUND OR SKIQ_FOUND OR ENABLE_SHMEMRF)
+endif(BLADERF_FOUND OR UHD_FOUND OR SOAPYSDR_FOUND OR ZEROMQ_FOUND OR ENABLE_SHMEMRF)
 
 # Boost
 if(BUILD_STATIC)

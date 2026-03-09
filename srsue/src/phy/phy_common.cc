@@ -655,9 +655,6 @@ void phy_common::reset_measurements(uint32_t cc_idx)
     for (uint32_t cc = 0; cc < SRSRAN_MAX_CARRIERS; cc++) {
       reset_measurements(cc);
     }
-
-    // If cc_idx >= SRSRAN_MAX_CARRIERS all have been reset, exit the
-    // function to avoid out-of-bounds memory access
     return;
   }
 
@@ -784,7 +781,7 @@ void phy_common::update_measurements(uint32_t                     cc_idx,
     ch.sinr         = avg_sinr_db[cc_idx];
     ch.sync_err     = chest_res.sync_error;
 
-    // added log to track rssi etc
+    // XXX_JG added log to track rssi etc
     logger.info("cc_idx %d, noise %3.3f, rsrp %3.3f, rsrq %3.3f, rssi %3.3f, tx_power %3.2f, pathloss %3.3f, sinr %3.3f, snr %3.3f, sync_err %f",
                 cc_idx,
                 ch.n,

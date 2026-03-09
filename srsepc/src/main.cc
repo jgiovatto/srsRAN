@@ -58,6 +58,7 @@ typedef struct {
   std::string filename;
 } log_args_t;
 
+// XXX_JG added daemonize
 typedef struct {
   bool daemonize;
 } runtime_args_t;

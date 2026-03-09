@@ -500,7 +500,7 @@ static int parse_args(all_args_t* args, int argc, char* argv[])
         bpo::value<bool>(&args->stack.have_tti_time_stats)->default_value(true),
         "Calculate TTI execution statistics")
 
-    // run as a daemon
+    // XXX_JG run as a daemon
     ("runtime.daemonize", bpo::value<bool>(&args->runtime.daemonize)->default_value(false), "Run the process as a daemon")
     ;
 

@@ -77,6 +77,7 @@ typedef struct {
   std::size_t tracing_buffcapacity;
 } general_args_t;
 
+// XXXJG added daemonize
 typedef struct {
   bool daemonize;
 } runtime_args_t;
